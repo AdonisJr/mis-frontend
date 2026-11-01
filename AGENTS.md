@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Today it is generator output only; the first ticket is auth (login + admin/registrar roles), then the students page with the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1); next is the students page with the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -22,17 +22,26 @@ Layout (planned folders marked *):
 
 ```
 index.html            Vite entry → /src/main.js
-vite.config.js        plugin-vue + @tailwindcss/vite (add the @/ → src/ alias)
+vite.config.js        plugin-vue + @tailwindcss/vite + @/ → src/ alias
 .env.example          VITE_API_URL, VITE_PUSHER_APP_KEY/HOST/PORT/SCHEME/APP_CLUSTER
 src/
-  main.js             createApp + Pinia + router + style.css
-  router.js           all routes; App.vue must render <router-view />
-  App.vue, style.css  (style.css: @import "tailwindcss"; drop generator demo CSS)
-  services/*          http.js (the ONE axios client, baseURL = VITE_API_URL, auth interceptors) + <domain>Service.js
-  stores/*            <name>Store.js → use<Name>Store (cross-page state only, e.g. auth user/token)
-  components/         PascalCase presentational SFCs (groups like modal/)
-  views/*             pages, views/<role>/
-  layout/*            <Name>PanelLayout.vue, layout/sidebar/<Role>Sidebar.vue
+  main.js             createApp + Pinia + router + vue-toastification (Toast + CSS) + style.css
+  router.js           all routes + beforeEach guard: restoreSession() once per app load, then meta.roles
+                      any-match; logged out or no staff role → clear session → /login
+  App.vue, style.css  App.vue renders only <router-view />; style.css is only @import "tailwindcss"
+  services/           http.js — the ONE axios client: baseURL = VITE_API_URL, Accept: application/json,
+                        Bearer token; 401 → clear session + toast + /login; 403 → toast server message, session
+                        kept; axios config flag skipAuthHandling: true bypasses both reactions
+                      authService.js — loginUser POST /login (top-level token), fetchCurrentUser GET /user
+                        ({ user } wrapper), logoutUser POST /logout (204)
+                      <domain>Service.js for every other domain
+  stores/             <name>Store.js → use<Name>Store (cross-page state only)
+                      authStore.js → useAuthStore + STAFF_ROLES ['admin','registrar']; the only code that
+                        touches localStorage (keys mis_auth_token, mis_auth_user)
+  components/         PascalCase presentational SFCs (groups like modal/); LogoutButton.vue
+  views/              pages, views/<role>/; LoginView.vue (/login, public), HomeView.vue (/, Home, staff)
+  layout/             <Name>PanelLayout.vue, layout/sidebar/<Role>Sidebar.vue*; MainPanelLayout.vue is the
+                        parent of every guarded route (meta.roles = STAFF_ROLES), header + LogoutButton
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
@@ -44,7 +53,7 @@ Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only 
 - Requires Node 20.19+ or 22.12+ (Vite 8). On Node 20.18 `npm run build` fails.
 - Install with `npm install` (`.npmrc` keeps `legacy-peer-deps=true`); `cp .env.example .env`. Never read or commit `.env`.
 - Conventions: `<script setup>` SFCs; `@/` imports; HTTP only via `src/services/` on `http.js`; services return `response.data` and let errors reject with the server message; Tailwind only (no Vuetify); toasts via `vue-toastification` with a loading state per async call; no `console.*`; no hardcoded URLs or Pusher keys.
-- Auth is the first ticket: Sanctum token handling lives in `http.js` interceptors, user/role state in a Pinia store, role checks in `router.js` guards.
+- Auth (mis-1): Sanctum token handling lives in `http.js` interceptors, user/role state in `authStore.js`, role checks in the `router.js` guard. New guarded pages go as children of the `MainPanelLayout` route so they inherit `meta.roles`.
 
 ## Verification
 
