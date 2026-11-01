@@ -51,7 +51,7 @@ This repo adopts enrollment-fe's FE rules (decided 2026-10-16). The RFID assignm
   - Shows a loading state while fetching and reports success/failure to the user with `vue-toastification` (decided 2026-10-16).
 - **route** — register every page in `src/router.js`; `App.vue` renders `<router-view />` (the generator `App.vue` renders `HelloWorld` directly — replace it).
 - **Build order (decided 2026-10-16)** — auth first: login page, token in the `http.js` interceptors, user/role state in a Pinia store, and router guards for admin/registrar. Then the students page, modal, RFID scan prompt and table.
-- **Styling** — Tailwind utility classes only, via `@import "tailwindcss"` (`src/style.css`). No Vuetify components, directives or styles (decided 2026-10-16). Remove the generator demo CSS in `src/style.css` before building real pages.
+- **Styling** — Tailwind utility classes only, via `@import "tailwindcss"` (`src/style.css`). No Vuetify components, directives or styles (decided 2026-10-16). Remove the generator demo CSS in `src/style.css` before building real pages. Every page follows the **Ledger** visual style in §9 (decided 2026-11-01).
 - **Imports** — use the `@/` alias for `src/` (decided 2026-10-16). Add it to `vite.config.js` `resolve.alias` before the first import that needs it (no alias exists today).
 
 ## 4. Data & Validation
@@ -85,6 +85,7 @@ This repo adopts enrollment-fe's FE rules (decided 2026-10-16). The RFID assignm
 - No relative `../` imports into `src/` once the `@/` alias exists (decided 2026-10-16).
 - No reading or committing `.env` (`.gitignore`).
 - Do not copy `enrollment-fe` code blindly; rebuild against these rules and record any deliberate behaviour change.
+- No raw hex/rgb colors, arbitrary values (`bg-[#…]`, `p-[13px]`) or inline `style` colors in components — use the §9 theme tokens and Tailwind's scale. No second accent color, gradients, emoji icons or decorative shadows on cards.
 
 ## 8. Self-Audit Checklist
 
@@ -99,3 +100,44 @@ Run on every touched file before finishing.
 - [ ] RFID flow: channel opened before the prompt shows; missing UID refused before the PUT; list refreshed after assignment; `/rfid/close` called on modal close; Echo channel left on unmount
 - [ ] No `console.*`, no hardcoded URL or key
 - [ ] `npm run build` succeeds on Node ≥ 20.19
+- [ ] Ledger style (§9): colors only from the theme tokens, status shown with the standard chips, page sits inside `MainPanelLayout` with title in the top bar, works at 400px width, visible focus ring on every control
+
+## 9. Visual Design — Ledger (decided 2026-11-01)
+
+Light, calm office software: white surfaces, a light grey page, one blue accent. The data and the attendance status colors are the only loud things on screen. Reference mockup: https://claude.ai/artifact/6DvLHSjN1wtMZDGJvXLYxa (style "Ledger").
+
+**Theme tokens** — define once in `src/style.css` with Tailwind v4 `@theme`, then use them as classes (`bg-surface`, `text-ink-muted`, `bg-accent`…). Components never use hex values.
+
+```css
+@theme {
+  --color-page: #f7f8fa;        /* app background */
+  --color-surface: #ffffff;     /* sidebar, top bar, cards, tables */
+  --color-line: #e3e6eb;        /* every border and table rule */
+  --color-ink: #18202c;         /* body text */
+  --color-ink-muted: #67707f;   /* secondary text, table headers, captions */
+  --color-accent: #1d4fcf;      /* primary buttons, active nav, links, focus ring */
+  --color-accent-soft: #eaf0fd; /* active nav background, selected rows */
+  --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;  /* RFID UIDs, codes */
+}
+```
+
+**Status chips** (semantic, separate from the accent — same everywhere): Present `bg-green-100 text-green-800`, Late `bg-amber-100 text-amber-800`, Absent `bg-red-100 text-red-800`, Timed out / neutral `bg-slate-200 text-slate-700`. Pill shape `rounded-full px-2.5 py-0.5 text-xs font-bold`. Never color alone — always a word.
+
+**Shell** (`src/layout/MainPanelLayout.vue`):
+- Sidebar `w-58` (≈232px), `bg-surface border-r border-line`; groups with uppercase `text-xs tracking-wider text-ink-muted` headings; items `rounded-md px-2.5 py-2 text-sm` with an icon; active item `bg-accent-soft text-accent font-semibold` plus a 3px left accent edge. Items come from one nav config filtered by the user's roles.
+- Below `md`, the sidebar collapses to an icon rail / drawer; it never pushes the page sideways.
+- Top bar `bg-surface border-b border-line px-6 py-3.5`: breadcrumb + page title (`text-lg font-bold`) on the left; school-year badge, scanner status and user menu (name, roles, Logout) on the right.
+- Content `p-6 gap-4` (`p-3.5` on phones), on `bg-page`.
+
+**Components**:
+- Cards and panels: `bg-surface border border-line rounded-lg` — no shadow. Panel header row `px-4 py-3 border-b border-line` with title left, actions right.
+- Tables: header `text-xs uppercase tracking-wider text-ink-muted bg-page`, rows `border-t border-line`, `tabular-nums` for times and counts, UIDs in `font-mono text-xs`; wrap wide tables in `overflow-x-auto`.
+- Buttons: primary `bg-accent text-white rounded-md px-3 py-1.5 text-sm font-semibold`; secondary `border border-line bg-surface`; destructive `bg-red-600 text-white`. One primary button per view area.
+- Inputs: `border border-line rounded-md bg-surface px-3 py-2`, label above, error text `text-red-700 text-xs` below.
+- Focus: every interactive element shows `focus-visible:ring-2 ring-accent ring-offset-1`.
+- Radius scale: `rounded-md` (controls), `rounded-lg` (cards), `rounded-full` (chips, avatars). Nothing larger.
+
+**Typography**: Manrope (self-hosted via `@fontsource-variable/manrope` when the shell ticket adds it; system font fallback). Sizes: page title `text-lg`/`font-bold`, panel title `text-sm font-bold`, body `text-sm`, captions `text-xs`. Numbers in tables and stat tiles use `tabular-nums`.
+
+**Icons**: `@lucide/vue` only (replaces the deprecated `lucide-vue-next`, decided 2026-11-01), 16–18px, `stroke-width` default; no emoji.
