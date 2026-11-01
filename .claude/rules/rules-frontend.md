@@ -11,7 +11,7 @@ This repo adopts enrollment-fe's FE rules (decided 2026-10-16). The RFID assignm
 ## 1. Stack
 
 - Language / runtime: JavaScript (ES modules, no TypeScript) (`package.json`). Node 20.19+ or 22.12+, required by Vite 8 (`README.md`).
-- Framework: Vue ^3.5.42 with `<script setup>` SFCs on Vite ^8.3.0 (`@vitejs/plugin-vue` ^6); vue-router ^5.4, Pinia ^4.1, axios ^1.20, Tailwind ^4.3.3 via `@tailwindcss/vite`, laravel-echo ^2.4 + pusher-js ^8.6 (`package.json`, `vite.config.js`). Toasts: `vue-toastification` (decided 2026-10-16; to be installed). **No Vuetify** (decided 2026-10-16) — its registration in `src/main.js` and the `vuetify` dependency are removed.
+- Framework: Vue ^3.5.42 with `<script setup>` SFCs on Vite ^8.3.0 (`@vitejs/plugin-vue` ^6); vue-router ^5.4, Pinia ^4.1, axios ^1.20, Tailwind ^4.3.3 via `@tailwindcss/vite`, laravel-echo ^2.4 + pusher-js ^8.6 (`package.json`, `vite.config.js`). Toasts: `vue-toastification` 2.0.0-rc.5 (decided 2026-10-16; installed in MIS-1). **No Vuetify** (decided 2026-10-16) — its registration in `src/main.js` and the `vuetify` dependency are removed.
 - Package manager: npm (`package-lock.json`); keep `.npmrc` `legacy-peer-deps=true`.
 - Database: none. All data comes from mis-backend at `import.meta.env.VITE_API_URL` (`.env.example`; decided 2026-10-16).
 - Commands: dev `npm run dev` (port 5173) · test none · lint none · build `npm run build` (`package.json`).
