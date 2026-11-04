@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+@theme {
+  --color-page: #f7f8fa;        /* app background */
+  --color-surface: #ffffff;     /* sidebar, top bar, cards, tables */
+  --color-line: #e3e6eb;        /* every border and table rule */
+  --color-ink: #18202c;         /* body text */
+  --color-ink-muted: #67707f;   /* secondary text, table headers, captions */
+  --color-accent: #1d4fcf;      /* primary buttons, active nav, links, focus ring */
+  --color-accent-soft: #eaf0fd; /* active nav background, selected rows */
+  --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;  /* RFID UIDs, codes */
+}

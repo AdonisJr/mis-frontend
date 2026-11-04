@@ -32,7 +32,7 @@ This repo adopts enrollment-fe's FE rules (decided 2026-10-16). The RFID assignm
 | component | `src/components/[<group>/]` | PascalCase `.vue`; groups such as `modal/` | `<script setup>`, `defineProps`/`defineEmits`/slots; presentational | reference (enrollment-fe) `src/components/modal/Modal.vue` |
 | view | `src/views/[<role>/]` | PascalCase `.vue`, lowercase role folder | `<script setup>`; calls services, holds page state, fetches in `onMounted`/`watch` | reference (enrollment-fe) `src/views/student/Student.vue` |
 | route | `src/router.js` | `name` PascalCase, `path` kebab-case | `createRouter({ history: createWebHistory(), routes })`; rendered through `<router-view />` in `App.vue` | `src/router.js` |
-| layout | `src/layout/`, `src/layout/sidebar/` | `<Name>PanelLayout.vue`, `<Role>Sidebar.vue` | parent route component with child routes | reference (enrollment-fe) `src/layout/MainPanelLayout.vue` |
+| layout | `src/layout/`, `src/layout/sidebar/` | `<Name>PanelLayout.vue`, `MainSidebar.vue` + `navConfig.js` (one role-filtered sidebar, MIS-2), `MainTopBar.vue` | parent route component with child routes | reference (enrollment-fe) `src/layout/MainPanelLayout.vue` |
 
 ## 3. Layer Rules
 
@@ -138,6 +138,6 @@ Light, calm office software: white surfaces, a light grey page, one blue accent.
 - Focus: every interactive element shows `focus-visible:ring-2 ring-accent ring-offset-1`.
 - Radius scale: `rounded-md` (controls), `rounded-lg` (cards), `rounded-full` (chips, avatars). Nothing larger.
 
-**Typography**: Manrope (self-hosted via `@fontsource-variable/manrope` when the shell ticket adds it; system font fallback). Sizes: page title `text-lg`/`font-bold`, panel title `text-sm font-bold`, body `text-sm`, captions `text-xs`. Numbers in tables and stat tiles use `tabular-nums`.
+**Typography**: Manrope (self-hosted via `@fontsource-variable/manrope`, imported once in `src/main.js` (MIS-2); system font fallback). Sizes: page title `text-lg`/`font-bold`, panel title `text-sm font-bold`, body `text-sm`, captions `text-xs`. Numbers in tables and stat tiles use `tabular-nums`.
 
 **Icons**: `@lucide/vue` only (replaces the deprecated `lucide-vue-next`, decided 2026-11-01), 16–18px, `stroke-width` default; no emoji.

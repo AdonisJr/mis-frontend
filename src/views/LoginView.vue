@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { useAuthStore } from '@/stores/authStore.js'
+import { ROOT_ROUTE_NAME } from '@/routeNames.js'
 
 const REQUIRED_FIELDS_MESSAGE = 'Enter your email and password.'
 const LOGIN_FAILED_MESSAGE = 'Login failed. Please try again.'
@@ -26,7 +27,7 @@ async function submitLogin() {
   try {
     await authStore.login({ email: email.value.trim(), password: password.value })
     toast.success(LOGIN_SUCCESS_MESSAGE)
-    router.push({ name: 'Home' })
+    router.push({ name: ROOT_ROUTE_NAME })
   } catch (error) {
     toast.error(error.response?.data?.message ?? error.message ?? LOGIN_FAILED_MESSAGE)
     password.value = ''
@@ -37,35 +38,35 @@ async function submitLogin() {
 </script>
 
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gray-100 px-4">
-    <div class="w-full max-w-sm rounded-lg bg-white p-6 shadow-md">
-      <h1 class="mb-6 text-center text-2xl font-semibold text-gray-800">MIS Login</h1>
+  <div class="flex min-h-screen items-center justify-center bg-page px-4 text-ink">
+    <div class="w-full max-w-sm rounded-lg border border-line bg-surface p-6">
+      <h1 class="mb-6 text-center text-lg font-bold text-ink">MIS Login</h1>
       <form class="space-y-4" @submit.prevent="submitLogin">
         <div>
-          <label for="login-email" class="mb-1 block text-sm font-medium text-gray-700">Email</label>
+          <label for="login-email" class="mb-1 block text-sm font-semibold text-ink">Email</label>
           <input
             id="login-email"
             v-model="email"
             type="email"
             autocomplete="username"
-            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none disabled:bg-gray-100"
+            class="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:bg-page"
             :disabled="isSubmitting"
           />
         </div>
         <div>
-          <label for="login-password" class="mb-1 block text-sm font-medium text-gray-700">Password</label>
+          <label for="login-password" class="mb-1 block text-sm font-semibold text-ink">Password</label>
           <input
             id="login-password"
             v-model="password"
             type="password"
             autocomplete="current-password"
-            class="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:outline-none disabled:bg-gray-100"
+            class="w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:bg-page"
             :disabled="isSubmitting"
           />
         </div>
         <button
           type="submit"
-          class="w-full rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          class="w-full rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent/90 focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60"
           :disabled="isSubmitting"
         >
           {{ isSubmitting ? 'Logging in…' : 'Log in' }}

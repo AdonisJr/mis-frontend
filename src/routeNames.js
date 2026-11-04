@@ -1,0 +1,11 @@
+// single source of route names: router, store, views and layout import these instead of repeating literals
+export const LOGIN_ROUTE_NAME = 'Login'
+export const ROOT_ROUTE_NAME = 'Root'
+export const DASHBOARD_ROUTE_NAME = 'Dashboard'
+export const STUDENTS_ROUTE_NAME = 'Students'
+export const EMPLOYEES_ROUTE_NAME = 'Employees'
+export const RFID_CARDS_ROUTE_NAME = 'RfidCards'
+export const ATTENDANCE_TODAY_ROUTE_NAME = 'AttendanceToday'
+export const ATTENDANCE_RECORDS_ROUTE_NAME = 'AttendanceRecords'
+export const SCHOOL_YEARS_ROUTE_NAME = 'SchoolYears'
+export const NOT_FOUND_ROUTE_NAME = 'NotFound'

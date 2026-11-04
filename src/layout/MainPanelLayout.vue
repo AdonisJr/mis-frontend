@@ -1,45 +1,59 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
-import LogoutButton from '@/components/LogoutButton.vue'
-import { useAuthStore } from '@/stores/authStore.js'
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import MainTopBar from '@/layout/MainTopBar.vue'
+import MainSidebar from '@/layout/sidebar/MainSidebar.vue'
 
-const LOGOUT_SUCCESS_MESSAGE = 'Logged out.'
-const LOGOUT_FAILED_MESSAGE = 'Could not reach the server; you have been logged out on this device.'
+const isSidebarCollapsed = ref(false)
+const isDrawerOpen = ref(false)
+const sidebar = ref(null)
+const topBar = ref(null)
 
-const isLoggingOut = ref(false)
+const route = useRoute()
 
-const authStore = useAuthStore()
-const router = useRouter()
-const toast = useToast()
-
-async function logoutAndRedirect() {
-  if (isLoggingOut.value) return
-  isLoggingOut.value = true
-  try {
-    await authStore.logout()
-    toast.success(LOGOUT_SUCCESS_MESSAGE)
-  } catch {
-    toast.error(LOGOUT_FAILED_MESSAGE)
-  } finally {
-    isLoggingOut.value = false
-    router.push({ name: 'Login' })
-  }
+function toggleSidebarCollapse() {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
 }
+
+function openDrawer() {
+  isDrawerOpen.value = true
+}
+
+function closeDrawer() {
+  isDrawerOpen.value = false
+}
+
+function closeDrawerOnEscape(keyboardEvent) {
+  if (keyboardEvent.key !== 'Escape' || !isDrawerOpen.value) return
+  closeDrawer()
+}
+
+watch(() => route.fullPath, closeDrawer)
+
+watch(isDrawerOpen, async (isOpen) => {
+  // nextTick waits until the drawer is visible, otherwise focus() is ignored
+  await nextTick()
+  if (isOpen) sidebar.value?.focusCloseButton()
+  else topBar.value?.focusMenuButton()
+})
+
+// Escape must close the drawer wherever focus is, not only inside the aside
+onMounted(() => document.addEventListener('keydown', closeDrawerOnEscape))
+onBeforeUnmount(() => document.removeEventListener('keydown', closeDrawerOnEscape))
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <header class="flex items-center justify-between bg-white px-6 py-3 shadow-sm">
-      <span class="text-lg font-semibold text-gray-800">MIS</span>
-      <div class="flex items-center gap-4">
-        <span class="text-sm text-gray-600">{{ authStore.user?.name }}</span>
-        <LogoutButton :is-loading="isLoggingOut" @logout="logoutAndRedirect" />
-      </div>
-    </header>
-    <main>
-      <router-view />
-    </main>
+  <div class="flex min-h-screen bg-page text-ink">
+    <MainSidebar
+      ref="sidebar"
+      :is-collapsed="isSidebarCollapsed"
+      :is-drawer-open="isDrawerOpen"
+      @toggle-collapse="toggleSidebarCollapse"
+      @close-drawer="closeDrawer"
+    />
+    <div class="flex min-w-0 flex-1 flex-col">
+      <MainTopBar ref="topBar" @open-drawer="openDrawer" />
+      <main class="flex flex-1 flex-col gap-4 p-3.5 md:p-6"><router-view /></main>
+    </div>
   </div>
 </template>

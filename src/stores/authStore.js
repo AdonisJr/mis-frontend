@@ -1,8 +1,17 @@
 import { defineStore } from 'pinia'
 import { fetchCurrentUser, loginUser, logoutUser } from '@/services/authService.js'
 import { HTTP_UNAUTHORIZED } from '@/services/http.js'
+import { DASHBOARD_ROUTE_NAME, STUDENTS_ROUTE_NAME } from '@/routeNames.js'
 
-export const STAFF_ROLES = ['admin', 'registrar']
+export const ADMIN_ROLE = 'admin'
+export const REGISTRAR_ROLE = 'registrar'
+export const STAFF_ROLES = [ADMIN_ROLE, REGISTRAR_ROLE]
+
+// order is precedence: admin wins for a user holding both roles
+const LANDING_ROUTES = [
+  { role: ADMIN_ROLE, routeName: DASHBOARD_ROUTE_NAME },
+  { role: REGISTRAR_ROLE, routeName: STUDENTS_ROUTE_NAME },
+]
 
 const TOKEN_STORAGE_KEY = 'mis_auth_token'
 const USER_STORAGE_KEY = 'mis_auth_user'
@@ -25,6 +34,9 @@ export const useAuthStore = defineStore('auth', {
   getters: {
     isAuthenticated: (state) => Boolean(state.token),
     userRoles: (state) => state.user?.roles ?? [],
+    landingRouteName() {
+      return LANDING_ROUTES.find((landingRoute) => this.userRoles.includes(landingRoute.role))?.routeName ?? null
+    },
   },
 
   actions: {
