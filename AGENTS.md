@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1); next is the students page with the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), and the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2); next is the students page with the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -12,7 +12,7 @@ Owner: a.baladon@qstrike.com. Part of the `mis` project — shared plans, rules 
 
 ## Local Contracts
 
-- Stack: javascript / Vue ^3.5.42 + Vite ^8.3, Pinia, vue-router, axios, Tailwind 4, laravel-echo + pusher-js · DB: none (all data from mis-backend)
+- Stack: javascript / Vue ^3.5.42 + Vite ^8.3, Pinia, vue-router, axios, Tailwind 4, laravel-echo + pusher-js, icons `@lucide/vue`, font `@fontsource-variable/manrope` ("Manrope Variable") · DB: none (all data from mis-backend)
 - Layer chain (build order): api-service → store? → component → view → route → layout?
 - Coding rules: `.claude/rules/rules-common.md`, `.claude/rules/rules-frontend.md`. Both are binding.
 - Implementation agent: `fe-developer`. Auditor: `fe-auditor`.
@@ -25,10 +25,16 @@ index.html            Vite entry → /src/main.js
 vite.config.js        plugin-vue + @tailwindcss/vite + @/ → src/ alias
 .env.example          VITE_API_URL, VITE_PUSHER_APP_KEY/HOST/PORT/SCHEME/APP_CLUSTER
 src/
-  main.js             createApp + Pinia + router + vue-toastification (Toast + CSS) + style.css
-  router.js           all routes + beforeEach guard: restoreSession() once per app load, then meta.roles
-                      any-match; logged out or no staff role → clear session → /login
-  App.vue, style.css  App.vue renders only <router-view />; style.css is only @import "tailwindcss"
+  main.js             createApp + Pinia + router + vue-toastification (Toast + CSS) + @fontsource-variable/manrope
+                        + style.css
+  routeNames.js       single source of route-name constants (*_ROUTE_NAME), imported by router, store, views
+                        and layout; no route-name literals elsewhere (http.js keeps its 'Login')
+  router.js           all routes + beforeEach guard: restoreSession() once per app load; each MainPanelLayout
+                        child declares its own meta.roles + meta.title (no parent meta); logged out → /login;
+                        no landing page → clear session → /login; / (Root) → landing page; wrong role →
+                        landing page; catch-all is the guarded NotFound child (404 inside the shell)
+  App.vue, style.css  App.vue renders only <router-view />; style.css is @import "tailwindcss" + the
+                        rules-frontend §9 Ledger @theme tokens
   services/           http.js — the ONE axios client: baseURL = VITE_API_URL, Accept: application/json,
                         Bearer token; 401 → clear session + toast + /login; 403 → toast server message, session
                         kept; axios config flag skipAuthHandling: true bypasses both reactions
@@ -36,12 +42,20 @@ src/
                         ({ user } wrapper), logoutUser POST /logout (204)
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
-                      authStore.js → useAuthStore + STAFF_ROLES ['admin','registrar']; the only code that
-                        touches localStorage (keys mis_auth_token, mis_auth_user)
-  components/         PascalCase presentational SFCs (groups like modal/); LogoutButton.vue
-  views/              pages, views/<role>/; LoginView.vue (/login, public), HomeView.vue (/, Home, staff)
-  layout/             <Name>PanelLayout.vue, layout/sidebar/<Role>Sidebar.vue*; MainPanelLayout.vue is the
-                        parent of every guarded route (meta.roles = STAFF_ROLES), header + LogoutButton
+                      authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
+                        landingRouteName (admin → Dashboard, registrar → Students, admin first, else null);
+                        the only code that touches localStorage (keys mis_auth_token, mis_auth_user)
+  components/         PascalCase presentational SFCs (groups like modal/); UserMenu.vue (name, roles,
+                        Logout emit), EmptyState.vue ("Coming in a later ticket")
+  views/              pages, views/<role>/; LoginView.vue (/login, public); placeholders DashboardView
+                        (/dashboard), StudentsView (/students), EmployeesView (/employees), RfidCardsView
+                        (/rfid-cards), AttendanceTodayView (/attendance/today), AttendanceRecordsView
+                        (/attendance/records), SchoolYearsView (/school-years); NotFoundView (404 + Root)
+  layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
+                        guarded route, drawer/collapse state in memory only; MainTopBar.vue = menu button,
+                        breadcrumb, page title (meta.title), UserMenu + logout flow;
+                        layout/sidebar/MainSidebar.vue + navConfig.js (one NAV_ITEMS config, items
+                        filtered by the user's roles)
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
@@ -53,7 +67,8 @@ Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only 
 - Requires Node 20.19+ or 22.12+ (Vite 8). On Node 20.18 `npm run build` fails.
 - Install with `npm install` (`.npmrc` keeps `legacy-peer-deps=true`); `cp .env.example .env`. Never read or commit `.env`.
 - Conventions: `<script setup>` SFCs; `@/` imports; HTTP only via `src/services/` on `http.js`; services return `response.data` and let errors reject with the server message; Tailwind only (no Vuetify); toasts via `vue-toastification` with a loading state per async call; no `console.*`; no hardcoded URLs or Pusher keys.
-- Auth (mis-1): Sanctum token handling lives in `http.js` interceptors, user/role state in `authStore.js`, role checks in the `router.js` guard. New guarded pages go as children of the `MainPanelLayout` route so they inherit `meta.roles`.
+- Auth (mis-1): Sanctum token handling lives in `http.js` interceptors, user/role state in `authStore.js`, role checks in the `router.js` guard. New guarded pages go as children of the `MainPanelLayout` route with their own `meta.roles` + `meta.title`, a route-name constant in `src/routeNames.js`, and (if in the menu) a `NAV_ITEMS` entry in `src/layout/sidebar/navConfig.js` with the same roles.
+- Ledger style (mis-2): colors from the `@theme` tokens in `src/style.css`, font "Manrope Variable" via `@fontsource-variable/manrope`, icons from `@lucide/vue` only.
 
 ## Verification
 
