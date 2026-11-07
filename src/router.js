@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { ADMIN_ROLE, STAFF_ROLES, useAuthStore } from '@/stores/authStore.js'
+import { useAuthStore } from '@/stores/authStore.js'
 import {
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
@@ -12,8 +12,7 @@ import {
   SCHOOL_YEARS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
 } from '@/routeNames.js'
-
-const ADMIN_ONLY_ROLES = [ADMIN_ROLE]
+import { ROUTE_ROLES } from '@/routeRoles.js'
 
 const routes = [
   { path: '/login', name: LOGIN_ROUTE_NAME, component: () => import('@/views/LoginView.vue') },
@@ -26,55 +25,55 @@ const routes = [
         path: '',
         name: ROOT_ROUTE_NAME,
         component: () => import('@/views/NotFoundView.vue'),
-        meta: { roles: STAFF_ROLES },
+        meta: { roles: ROUTE_ROLES[ROOT_ROUTE_NAME] },
       },
       {
         path: 'dashboard',
         name: DASHBOARD_ROUTE_NAME,
         component: () => import('@/views/DashboardView.vue'),
-        meta: { roles: ADMIN_ONLY_ROLES, title: 'Dashboard' },
+        meta: { roles: ROUTE_ROLES[DASHBOARD_ROUTE_NAME], title: 'Dashboard' },
       },
       {
         path: 'students',
         name: STUDENTS_ROUTE_NAME,
         component: () => import('@/views/StudentsView.vue'),
-        meta: { roles: STAFF_ROLES, title: 'Students' },
+        meta: { roles: ROUTE_ROLES[STUDENTS_ROUTE_NAME], title: 'Students' },
       },
       {
         path: 'employees',
         name: EMPLOYEES_ROUTE_NAME,
         component: () => import('@/views/EmployeesView.vue'),
-        meta: { roles: ADMIN_ONLY_ROLES, title: 'Employees' },
+        meta: { roles: ROUTE_ROLES[EMPLOYEES_ROUTE_NAME], title: 'Employees' },
       },
       {
         path: 'rfid-cards',
         name: RFID_CARDS_ROUTE_NAME,
         component: () => import('@/views/RfidCardsView.vue'),
-        meta: { roles: ADMIN_ONLY_ROLES, title: 'RFID Cards' },
+        meta: { roles: ROUTE_ROLES[RFID_CARDS_ROUTE_NAME], title: 'RFID Cards' },
       },
       {
         path: 'attendance/today',
         name: ATTENDANCE_TODAY_ROUTE_NAME,
         component: () => import('@/views/AttendanceTodayView.vue'),
-        meta: { roles: ADMIN_ONLY_ROLES, title: 'Today' },
+        meta: { roles: ROUTE_ROLES[ATTENDANCE_TODAY_ROUTE_NAME], title: 'Today' },
       },
       {
         path: 'attendance/records',
         name: ATTENDANCE_RECORDS_ROUTE_NAME,
         component: () => import('@/views/AttendanceRecordsView.vue'),
-        meta: { roles: ADMIN_ONLY_ROLES, title: 'Records' },
+        meta: { roles: ROUTE_ROLES[ATTENDANCE_RECORDS_ROUTE_NAME], title: 'Records' },
       },
       {
         path: 'school-years',
         name: SCHOOL_YEARS_ROUTE_NAME,
         component: () => import('@/views/SchoolYearsView.vue'),
-        meta: { roles: ADMIN_ONLY_ROLES, title: 'School Years' },
+        meta: { roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME], title: 'School Years' },
       },
       {
         path: ':pathMatch(.*)*',
         name: NOT_FOUND_ROUTE_NAME,
         component: () => import('@/views/NotFoundView.vue'),
-        meta: { roles: STAFF_ROLES, title: 'Page not found' },
+        meta: { roles: ROUTE_ROLES[NOT_FOUND_ROUTE_NAME], title: 'Page not found' },
       },
     ],
   },

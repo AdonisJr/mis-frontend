@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Users,
 } from '@lucide/vue'
-import { ADMIN_ROLE, STAFF_ROLES } from '@/stores/authStore.js'
 import {
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
@@ -17,23 +16,23 @@ import {
   SCHOOL_YEARS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
 } from '@/routeNames.js'
+import { ROUTE_ROLES } from '@/routeRoles.js'
 
 const PEOPLE_GROUP = 'People'
 const ATTENDANCE_GROUP = 'Attendance'
 const SETUP_GROUP = 'Setup'
-const ADMIN_ONLY_ROLES = [ADMIN_ROLE]
 
 export const NAV_ROW_HEADING = 'heading'
 export const NAV_ROW_ITEM = 'item'
 
 export const NAV_ITEMS = [
-  { label: 'Dashboard', group: null, icon: LayoutDashboard, routeName: DASHBOARD_ROUTE_NAME, roles: ADMIN_ONLY_ROLES },
-  { label: 'Students', group: PEOPLE_GROUP, icon: GraduationCap, routeName: STUDENTS_ROUTE_NAME, roles: STAFF_ROLES },
-  { label: 'Employees', group: PEOPLE_GROUP, icon: Users, routeName: EMPLOYEES_ROUTE_NAME, roles: ADMIN_ONLY_ROLES },
-  { label: 'RFID Cards', group: PEOPLE_GROUP, icon: IdCard, routeName: RFID_CARDS_ROUTE_NAME, roles: ADMIN_ONLY_ROLES },
-  { label: 'Today', group: ATTENDANCE_GROUP, icon: CalendarCheck, routeName: ATTENDANCE_TODAY_ROUTE_NAME, roles: ADMIN_ONLY_ROLES },
-  { label: 'Records', group: ATTENDANCE_GROUP, icon: ClipboardList, routeName: ATTENDANCE_RECORDS_ROUTE_NAME, roles: ADMIN_ONLY_ROLES },
-  { label: 'School Years', group: SETUP_GROUP, icon: CalendarRange, routeName: SCHOOL_YEARS_ROUTE_NAME, roles: ADMIN_ONLY_ROLES },
+  { label: 'Dashboard', group: null, icon: LayoutDashboard, routeName: DASHBOARD_ROUTE_NAME, roles: ROUTE_ROLES[DASHBOARD_ROUTE_NAME] },
+  { label: 'Students', group: PEOPLE_GROUP, icon: GraduationCap, routeName: STUDENTS_ROUTE_NAME, roles: ROUTE_ROLES[STUDENTS_ROUTE_NAME] },
+  { label: 'Employees', group: PEOPLE_GROUP, icon: Users, routeName: EMPLOYEES_ROUTE_NAME, roles: ROUTE_ROLES[EMPLOYEES_ROUTE_NAME] },
+  { label: 'RFID Cards', group: PEOPLE_GROUP, icon: IdCard, routeName: RFID_CARDS_ROUTE_NAME, roles: ROUTE_ROLES[RFID_CARDS_ROUTE_NAME] },
+  { label: 'Today', group: ATTENDANCE_GROUP, icon: CalendarCheck, routeName: ATTENDANCE_TODAY_ROUTE_NAME, roles: ROUTE_ROLES[ATTENDANCE_TODAY_ROUTE_NAME] },
+  { label: 'Records', group: ATTENDANCE_GROUP, icon: ClipboardList, routeName: ATTENDANCE_RECORDS_ROUTE_NAME, roles: ROUTE_ROLES[ATTENDANCE_RECORDS_ROUTE_NAME] },
+  { label: 'School Years', group: SETUP_GROUP, icon: CalendarRange, routeName: SCHOOL_YEARS_ROUTE_NAME, roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {

@@ -30,7 +30,7 @@ This repo adopts enrollment-fe's FE rules (decided 2026-10-16). The RFID assignm
 | api-service | `src/services/` | `http.js` (the one client) + `<domain>Service.js` exporting verb-named `async` functions (`fetchStudents`, `updateStudentRfid`, `openRfidChannel`, `closeRfidChannel`) | `<domain>Service.js` imports the shared client from `@/services/http.js` | reference (enrollment-fe) `src/services/userApiService.js`; decided 2026-10-16 |
 | store | `src/stores/` | `<name>Store.js` exporting `use<Name>Store` | Pinia options API, registered by `createPinia()` in `src/main.js` | reference (enrollment-fe) `src/stores/userStore.js` |
 | component | `src/components/[<group>/]` | PascalCase `.vue`; groups such as `modal/` | `<script setup>`, `defineProps`/`defineEmits`/slots; presentational | reference (enrollment-fe) `src/components/modal/Modal.vue` |
-| view | `src/views/[<role>/]` | PascalCase `.vue`, lowercase role folder | `<script setup>`; calls services, holds page state, fetches in `onMounted`/`watch` | reference (enrollment-fe) `src/views/student/Student.vue` |
+| view | `src/views/` (flat, no role folders) | `<Name>View.vue` | `<script setup>`; calls services, holds page state, fetches in `onMounted`/`watch` | reference (enrollment-fe) `src/views/student/Student.vue` |
 | route | `src/router.js` | `name` PascalCase, `path` kebab-case | `createRouter({ history: createWebHistory(), routes })`; rendered through `<router-view />` in `App.vue` | `src/router.js` |
 | layout | `src/layout/`, `src/layout/sidebar/` | `<Name>PanelLayout.vue`, `MainSidebar.vue` + `navConfig.js` (one role-filtered sidebar, MIS-2), `MainTopBar.vue` | parent route component with child routes | reference (enrollment-fe) `src/layout/MainPanelLayout.vue` |
 
@@ -71,9 +71,9 @@ This repo adopts enrollment-fe's FE rules (decided 2026-10-16). The RFID assignm
 
 ## 6. Tests
 
-- Framework: none configured (`package.json`).
-- Location & naming: n/a until a runner exists.
-- Required per change: `npm run build` passes on Node ≥ 20.19, and the changed page is checked by hand in `npm run dev` against a running mis-backend (and Pusher for the RFID flow).
+- Framework: Vitest 5.0.5, node environment, `npm test` (`vitest run`); added in MIS-4.
+- Location & naming: next to the module, `src/<folder>/<name>.test.js`; unit tests for pure functions in `src/utils/` (components and views are checked by hand).
+- Required per change: `npm test` and `npm run build` pass on Node ≥ 20.19, and the changed page is checked by hand in `npm run dev` against a running mis-backend (and Pusher for the RFID flow).
 - Fixtures / factories: none.
 
 ## 7. Prohibitions
