@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), and school years with an active-year badge (mis-3); next is the students page with the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -13,7 +13,7 @@ Owner: a.baladon@qstrike.com. Part of the `mis` project — shared plans, rules 
 ## Local Contracts
 
 - Stack: javascript / Vue ^3.5.42 + Vite ^8.3, Pinia, vue-router, axios, Tailwind 4, laravel-echo + pusher-js, icons `@lucide/vue`, font `@fontsource-variable/manrope` ("Manrope Variable") · DB: none (all data from mis-backend)
-- Layer chain (build order): api-service → store? → component → view → route → layout?
+- Layer chain (build order): api-service → store? → component → view → route → layout? · pure helpers in `src/utils/` sit outside the chain (no Vue, no HTTP) and are unit-tested with Vitest
 - Coding rules: `.claude/rules/rules-common.md`, `.claude/rules/rules-frontend.md`. Both are binding.
 - Implementation agent: `fe-developer`. Auditor: `fe-auditor`.
 - Plans for this repo: `.claude/common/plans/active/<slug>/plan-fe.md`
@@ -22,15 +22,18 @@ Layout (planned folders marked *):
 
 ```
 index.html            Vite entry → /src/main.js
-vite.config.js        plugin-vue + @tailwindcss/vite + @/ → src/ alias
+vite.config.js        plugin-vue + @tailwindcss/vite + @/ → src/ alias + Vitest test block (node environment, src/**/*.test.js)
 .env.example          VITE_API_URL, VITE_PUSHER_APP_KEY/HOST/PORT/SCHEME/APP_CLUSTER
 src/
   main.js             createApp + Pinia + router + vue-toastification (Toast + CSS) + @fontsource-variable/manrope
                         + style.css
   routeNames.js       single source of route-name constants (*_ROUTE_NAME), imported by router, store, views
                         and layout; no route-name literals elsewhere (http.js keeps its 'Login')
+  routeRoles.js       single source of page roles: ROUTE_ROLES keyed by the *_ROUTE_NAME constants (every
+                        guarded route incl. Root and NotFound); ADMIN_ONLY_ROLES declared only here; read by
+                        router.js meta.roles and layout/sidebar/navConfig.js
   router.js           all routes + beforeEach guard: restoreSession() once per app load; each MainPanelLayout
-                        child declares its own meta.roles + meta.title (no parent meta); logged out → /login;
+                        child declares its own meta.roles (from ROUTE_ROLES) + meta.title (no parent meta); logged out → /login;
                         no landing page → clear session → /login; / (Root) → landing page; wrong role →
                         landing page; catch-all is the guarded NotFound child (404 inside the shell)
   App.vue, style.css  App.vue renders only <router-view />; style.css is @import "tailwindcss" + the
@@ -43,6 +46,9 @@ src/
                       schoolYearService.js — fetchSchoolYears, createSchoolYear, updateSchoolYear,
                         deleteSchoolYear, activateSchoolYear, fetchActiveSchoolYear on /school-years (list
                         {school_years}, item {school_year}, Y-m-d dates)
+                      studentService.js — fetchStudents (params page, search, grade_level), createStudent,
+                        updateStudent, deleteStudent on /students (list {students, meta}, item {student},
+                        204 delete; never sends rfid or user_id)
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
                       authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
@@ -59,34 +65,44 @@ src/
                         trap/return), modal/ConfirmDialog.vue (on Modal; confirm/cancel emits);
                         SchoolYearFormFields.vue (name/start/end/description inputs with 422 field errors),
                         SchoolYearBadge.vue (top-bar "SY 2026–2027" / "No active SY")
-  views/              pages, views/<role>/; LoginView.vue (/login, public); placeholders DashboardView
-                        (/dashboard), StudentsView (/students), EmployeesView (/employees), RfidCardsView
-                        (/rfid-cards), AttendanceTodayView (/attendance/today), AttendanceRecordsView
-                        (/attendance/records); SchoolYearsView (/school-years, admin) — school-year table +
-                        CRUD + set-active; NotFoundView (404 + Root)
+                        StudentFormFields.vue (13 student inputs, Level + "Section / course" with hint,
+                        422 field errors, never rfid), StudentFilterBar.vue (search box + Level filter,
+                        "All levels"), TablePagination.vue (generic pager from list meta, change-page emit)
+  views/              every page flat as <Name>View.vue, no role subfolders (roles per route via
+                        src/routeRoles.js); LoginView.vue (/login, public); placeholders DashboardView
+                        (/dashboard), EmployeesView (/employees), RfidCardsView (/rfid-cards),
+                        AttendanceTodayView (/attendance/today), AttendanceRecordsView (/attendance/records);
+                        SchoolYearsView (/school-years, admin) — school-year table + CRUD + set-active;
+                        StudentsView (/students, admin + registrar) — paginated student table, search, level
+                        filter, add/edit/delete; NotFoundView (404 + Root)
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; MainTopBar.vue = menu button,
                         breadcrumb, page title (meta.title), SchoolYearBadge (both roles; loads the active
                         school year on mount), UserMenu + logout flow;
                         layout/sidebar/MainSidebar.vue + navConfig.js (one NAV_ITEMS config, items
                         filtered by the user's roles)
+  utils/              pure JS helpers (no Vue, DOM or HTTP imports), each with a co-located <name>.test.js:
+                        studentSearch.js (filters → list params, page reset on new search/level),
+                        studentForm.js (grade-level + gender lists, field labels, empty/edit form, required +
+                        12-digit LRN errors in Laravel {field: [msg]} shape, payload without rfid)
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
 
 ## Work Guidance
 
-- Run: `npm run dev` · Test: none installed · Lint: none installed (the only automated check is `npm run build`)
+- Run: `npm run dev` · Test: `npm test` (Vitest 5.0.5, `vitest run`, node environment, `src/**/*.test.js`) · Lint: none installed (automated checks: `npm test` and `npm run build`)
 - Ports: 5173 (dev); mis-backend on 8000
 - Requires Node 20.19+ or 22.12+ (Vite 8). On Node 20.18 `npm run build` fails.
 - Install with `npm install` (`.npmrc` keeps `legacy-peer-deps=true`); `cp .env.example .env`. Never read or commit `.env`.
 - Conventions: `<script setup>` SFCs; `@/` imports; HTTP only via `src/services/` on `http.js`; services return `response.data` and let errors reject with the server message; Tailwind only (no Vuetify); toasts via `vue-toastification` with a loading state per async call; no `console.*`; no hardcoded URLs or Pusher keys.
-- Auth (mis-1): Sanctum token handling lives in `http.js` interceptors, user/role state in `authStore.js`, role checks in the `router.js` guard. New guarded pages go as children of the `MainPanelLayout` route with their own `meta.roles` + `meta.title`, a route-name constant in `src/routeNames.js`, and (if in the menu) a `NAV_ITEMS` entry in `src/layout/sidebar/navConfig.js` with the same roles.
+- Auth (mis-1): Sanctum token handling lives in `http.js` interceptors, user/role state in `authStore.js`, role checks in the `router.js` guard. New guarded pages go as children of the `MainPanelLayout` route with their own `meta.title`, a route-name constant in `src/routeNames.js`, a `ROUTE_ROLES` entry in `src/routeRoles.js` (the single page-roles source, read by `router.js` `meta.roles` and `navConfig.js`; never a role list in either file), and (if in the menu) a `NAV_ITEMS` entry in `src/layout/sidebar/navConfig.js`.
 - Ledger style (mis-2): colors from the `@theme` tokens in `src/style.css`, font "Manrope Variable" via `@fontsource-variable/manrope`, icons from `@lucide/vue` only.
 
 ## Verification
 
 - `npm run build` passes (Node ≥ 20.19); changed pages checked by hand in `npm run dev` against a running mis-backend (and Pusher for the RFID flow)
+- `npm test` passes (Vitest)
 - `fe-auditor` passes on staged changes before commit
 
 ## Child DOX Index
