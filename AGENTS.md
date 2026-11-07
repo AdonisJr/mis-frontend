@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), and the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2); next is the students page with the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), and school years with an active-year badge (mis-3); next is the students page with the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -40,20 +40,34 @@ src/
                         kept; axios config flag skipAuthHandling: true bypasses both reactions
                       authService.js — loginUser POST /login (top-level token), fetchCurrentUser GET /user
                         ({ user } wrapper), logoutUser POST /logout (204)
+                      schoolYearService.js — fetchSchoolYears, createSchoolYear, updateSchoolYear,
+                        deleteSchoolYear, activateSchoolYear, fetchActiveSchoolYear on /school-years (list
+                        {school_years}, item {school_year}, Y-m-d dates)
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
                       authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
                         landingRouteName (admin → Dashboard, registrar → Students, admin first, else null);
                         the only code that touches localStorage (keys mis_auth_token, mis_auth_user)
+                      schoolYearStore.js → useSchoolYearStore: activeSchoolYear for the top-bar badge, loaded
+                        by MainTopBar on shell mount, replaced after set-active / editing the active row,
+                        cleared on logout; no localStorage
   components/         PascalCase presentational SFCs (groups like modal/); UserMenu.vue (name, roles,
-                        Logout emit), EmptyState.vue ("Coming in a later ticket")
+                        Logout emit), EmptyState.vue ("Coming in a later ticket");
+                        reusable, no service/store imports: DataTable.vue (columns/rows/rowKey/emptyText/
+                        isLoading, cell-<key> + actions slots; DataTableRow.vue is internal), modal/Modal.vue
+                        (isOpen/title, close emit, default + footer slots, document-level Escape, focus
+                        trap/return), modal/ConfirmDialog.vue (on Modal; confirm/cancel emits);
+                        SchoolYearFormFields.vue (name/start/end/description inputs with 422 field errors),
+                        SchoolYearBadge.vue (top-bar "SY 2026–2027" / "No active SY")
   views/              pages, views/<role>/; LoginView.vue (/login, public); placeholders DashboardView
                         (/dashboard), StudentsView (/students), EmployeesView (/employees), RfidCardsView
                         (/rfid-cards), AttendanceTodayView (/attendance/today), AttendanceRecordsView
-                        (/attendance/records), SchoolYearsView (/school-years); NotFoundView (404 + Root)
+                        (/attendance/records); SchoolYearsView (/school-years, admin) — school-year table +
+                        CRUD + set-active; NotFoundView (404 + Root)
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; MainTopBar.vue = menu button,
-                        breadcrumb, page title (meta.title), UserMenu + logout flow;
+                        breadcrumb, page title (meta.title), SchoolYearBadge (both roles; loads the active
+                        school year on mount), UserMenu + logout flow;
                         layout/sidebar/MainSidebar.vue + navConfig.js (one NAV_ITEMS config, items
                         filtered by the user's roles)
 ```

@@ -1,15 +1,19 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import { Menu } from '@lucide/vue'
+import SchoolYearBadge from '@/components/SchoolYearBadge.vue'
 import UserMenu from '@/components/UserMenu.vue'
 import { findNavGroupLabel } from '@/layout/sidebar/navConfig.js'
 import { LOGIN_ROUTE_NAME } from '@/routeNames.js'
+import { HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { useAuthStore } from '@/stores/authStore.js'
+import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
 
 const LOGOUT_SUCCESS_MESSAGE = 'Logged out.'
 const LOGOUT_FAILED_MESSAGE = 'Could not reach the server; you have been logged out on this device.'
+const ACTIVE_SCHOOL_YEAR_LOAD_FAILED_MESSAGE = 'Could not load the active school year.'
 
 const emit = defineEmits(['open-drawer'])
 
@@ -17,6 +21,7 @@ const isLoggingOut = ref(false)
 const menuButton = ref(null)
 
 const authStore = useAuthStore()
+const schoolYearStore = useSchoolYearStore()
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
@@ -34,13 +39,26 @@ async function logoutAndRedirect() {
     toast.error(LOGOUT_FAILED_MESSAGE)
   } finally {
     isLoggingOut.value = false
+    schoolYearStore.clearActiveSchoolYear()
     router.push({ name: LOGIN_ROUTE_NAME })
+  }
+}
+
+async function loadActiveSchoolYearBadge() {
+  try {
+    await schoolYearStore.loadActiveSchoolYear()
+  } catch (error) {
+    // http.js already toasted the ended session and redirected to login
+    if (error.response?.status === HTTP_UNAUTHORIZED) return
+    toast.error(ACTIVE_SCHOOL_YEAR_LOAD_FAILED_MESSAGE)
   }
 }
 
 function focusMenuButton() {
   menuButton.value?.focus()
 }
+
+onMounted(loadActiveSchoolYearBadge)
 
 defineExpose({ focusMenuButton })
 </script>
@@ -62,6 +80,11 @@ defineExpose({ focusMenuButton })
       </nav>
       <h1 class="truncate text-lg font-bold text-ink">{{ pageTitle }}</h1>
     </div>
+    <SchoolYearBadge
+      :start-date="schoolYearStore.activeSchoolYear?.start_date ?? ''"
+      :end-date="schoolYearStore.activeSchoolYear?.end_date ?? ''"
+      :is-loading="schoolYearStore.isActiveSchoolYearLoading"
+    />
     <UserMenu
       :user-name="authStore.user?.name ?? ''"
       :user-roles="authStore.userRoles"
