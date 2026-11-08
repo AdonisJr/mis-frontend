@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -49,6 +49,9 @@ src/
                       studentService.js — fetchStudents (params page, search, grade_level), createStudent,
                         updateStudent, deleteStudent on /students (list {students, meta}, item {student},
                         204 delete; never sends rfid or user_id)
+                      employeeService.js — fetchEmployees (params page, search, role, status), createEmployee,
+                        updateEmployee, setEmployeePassword (/password), deactivateEmployee, reactivateEmployee
+                        (body-less PUT /deactivate, /reactivate) on /employees (list {employees, meta}, item {employee})
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
                       authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
@@ -68,13 +71,19 @@ src/
                         StudentFormFields.vue (13 student inputs, Level + "Section / course" with hint,
                         422 field errors, never rfid), StudentFilterBar.vue (search box + Level filter,
                         "All levels"), TablePagination.vue (generic pager from list meta, change-page emit)
+                        EmployeeFilterBar.vue (search + Role "All roles" + Status "All statuses"),
+                        EmployeeFormFields.vue (name/email/contact, role checkboxes with lockedRoles, Add-only
+                        passwords), EmployeePasswordFields.vue (password + confirm with 422 errors; reset modal + Add),
+                        EmployeeRowActions.vue (Edit / Reset password / Deactivate / Reactivate row buttons, emits only)
   views/              every page flat as <Name>View.vue, no role subfolders (roles per route via
                         src/routeRoles.js); LoginView.vue (/login, public); placeholders DashboardView
-                        (/dashboard), EmployeesView (/employees), RfidCardsView (/rfid-cards),
-                        AttendanceTodayView (/attendance/today), AttendanceRecordsView (/attendance/records);
+                        (/dashboard), RfidCardsView (/rfid-cards), AttendanceTodayView (/attendance/today),
+                        AttendanceRecordsView (/attendance/records);
                         SchoolYearsView (/school-years, admin) — school-year table + CRUD + set-active;
                         StudentsView (/students, admin + registrar) — paginated student table, search, level
-                        filter, add/edit/delete; NotFoundView (404 + Root)
+                        filter, add/edit/delete; EmployeesView (/employees, admin) — paginated staff-account
+                        table, search, role + status filters, add/edit, reset password, deactivate/reactivate
+                        (own row: no deactivate, admin role locked); NotFoundView (404 + Root)
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; MainTopBar.vue = menu button,
                         breadcrumb, page title (meta.title), SchoolYearBadge (both roles; loads the active
@@ -85,6 +94,10 @@ src/
                         studentSearch.js (filters → list params, page reset on new search/level),
                         studentForm.js (grade-level + gender lists, field labels, empty/edit form, required +
                         12-digit LRN errors in Laravel {field: [msg]} shape, payload without rfid)
+                        employeeSearch.js (filters → page/search/role/status params; reuses studentSearch.js
+                        page/search helpers), employeeForm.js (role options, client errors, payloads without
+                        password on edit, role toggle, auth-user shape for the own-record refresh),
+                        employeeDisplay.js (role + Active/Inactive chip classes, contact placeholder, dialog texts)
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
