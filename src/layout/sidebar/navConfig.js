@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   CalendarCheck,
   CalendarRange,
   ClipboardList,
@@ -12,6 +13,7 @@ import {
   ATTENDANCE_TODAY_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
+  PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
@@ -33,6 +35,7 @@ export const NAV_ITEMS = [
   { label: 'Today', group: ATTENDANCE_GROUP, icon: CalendarCheck, routeName: ATTENDANCE_TODAY_ROUTE_NAME, roles: ROUTE_ROLES[ATTENDANCE_TODAY_ROUTE_NAME] },
   { label: 'Records', group: ATTENDANCE_GROUP, icon: ClipboardList, routeName: ATTENDANCE_RECORDS_ROUTE_NAME, roles: ROUTE_ROLES[ATTENDANCE_RECORDS_ROUTE_NAME] },
   { label: 'School Years', group: SETUP_GROUP, icon: CalendarRange, routeName: SCHOOL_YEARS_ROUTE_NAME, roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME] },
+  { label: 'Programs', group: SETUP_GROUP, icon: BookOpen, routeName: PROGRAMS_ROUTE_NAME, roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {
