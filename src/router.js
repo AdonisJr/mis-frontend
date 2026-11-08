@@ -7,6 +7,7 @@ import {
   EMPLOYEES_ROUTE_NAME,
   LOGIN_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
+  PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
@@ -68,6 +69,12 @@ const routes = [
         name: SCHOOL_YEARS_ROUTE_NAME,
         component: () => import('@/views/SchoolYearsView.vue'),
         meta: { roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME], title: 'School Years' },
+      },
+      {
+        path: 'programs',
+        name: PROGRAMS_ROUTE_NAME,
+        component: () => import('@/views/ProgramsView.vue'),
+        meta: { roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME], title: 'Programs' },
       },
       {
         path: ':pathMatch(.*)*',
