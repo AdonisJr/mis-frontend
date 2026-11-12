@@ -15,11 +15,16 @@ import { buildTermActivateMessage, buildTermDeleteMessage } from '@/utils/termDi
 import {
   buildFormFromTerm,
   buildTermPayload,
+  canReplaceTermDates,
   createEmptyTermForm,
+  createSuggestedTermForm,
   findTermConflictErrors,
   findTermFormErrors,
   getAllowedTermNumbers,
+  hasTermChanged,
   listOtherTerms,
+  suggestTermDates,
+  withTermDates,
 } from '@/utils/termForm.js'
 
 const TERM_FORM_ID = 'term-form'
@@ -137,7 +142,7 @@ function resetTermsState() {
 
 function openCreateForm() {
   editingTerm.value = null
-  formValues.value = createEmptyTermForm()
+  formValues.value = createSuggestedTermForm(props.schoolYear, terms.value)
   fieldErrors.value = {}
   isFormOpen.value = true
 }
@@ -155,7 +160,11 @@ function closeForm() {
 }
 
 function updateFormValues(nextFormValues) {
+  const previousValues = formValues.value
   formValues.value = nextFormValues
+  if (editingTerm.value || !hasTermChanged(previousValues, nextFormValues)) return
+  if (!canReplaceTermDates(nextFormValues, suggestTermDates(props.schoolYear, previousValues.term_number))) return
+  formValues.value = withTermDates(nextFormValues, suggestTermDates(props.schoolYear, nextFormValues.term_number))
 }
 
 function findTermErrors() {

@@ -14,6 +14,8 @@ const END_BEFORE_START_MESSAGE = 'End date must be after the start date.'
 const START_OUTSIDE_YEAR_MESSAGE = 'Start date must be within the school year.'
 const END_OUTSIDE_YEAR_MESSAGE = 'End date must be within the school year.'
 const TERM_NUMBER_USED_MESSAGE = 'This term already exists in this school year.'
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000
+const ISO_DATE_LENGTH = 10
 
 function toTermNumber(fieldValue) {
   return Number.parseInt(String(fieldValue ?? ''), 10)
@@ -42,6 +44,23 @@ function buildEarlierConflictMessage(formValues, earlierTerm) {
 function buildLaterConflictMessage(formValues, laterTerm) {
   if (isOverlapping(formValues, laterTerm)) return `The term overlaps the ${laterTerm.label}.`
   return `The term must end before the ${laterTerm.label} starts.`
+}
+
+// UTC keeps the day arithmetic free of time-zone and daylight-saving shifts
+function toUtcDay(isoDate) {
+  return Date.parse(`${isoDate}T00:00:00Z`) / MILLISECONDS_PER_DAY
+}
+
+function fromUtcDay(utcDay) {
+  return new Date(utcDay * MILLISECONDS_PER_DAY).toISOString().slice(0, ISO_DATE_LENGTH)
+}
+
+function hasSameDates(formValues, dateRange) {
+  return formValues?.start_date === dateRange?.start_date && formValues?.end_date === dateRange?.end_date
+}
+
+function hasNoDates(formValues) {
+  return toDateText(formValues?.start_date) === '' && toDateText(formValues?.end_date) === ''
 }
 
 export function getAllowedTermNumbers(termType) {
@@ -106,6 +125,44 @@ export function findTermConflictErrors(formValues, otherTerms) {
   if (earlierTerm) conflictErrors.start_date = [buildEarlierConflictMessage(formValues, earlierTerm)]
   if (laterTerm) conflictErrors.end_date = [buildLaterConflictMessage(formValues, laterTerm)]
   return conflictErrors
+}
+
+// splits the school year into equal parts (2 for semester, 3 for trimester); the admin adjusts the dates afterwards
+export function suggestTermDates(schoolYear, termNumberValue) {
+  const termNumber = toTermNumber(termNumberValue)
+  const allowedNumbers = getAllowedTermNumbers(schoolYear?.term_type)
+  if (!allowedNumbers.includes(termNumber)) return null
+  if (!isIsoDate(toDateText(schoolYear?.start_date)) || !isIsoDate(toDateText(schoolYear?.end_date))) return null
+  const yearStartDay = toUtcDay(schoolYear.start_date)
+  const dayCount = toUtcDay(schoolYear.end_date) - yearStartDay + 1
+  const startDay = yearStartDay + Math.round(((termNumber - 1) * dayCount) / allowedNumbers.length)
+  const endDay = yearStartDay + Math.round((termNumber * dayCount) / allowedNumbers.length) - 1
+  if (endDay <= startDay) return null
+  return { start_date: fromUtcDay(startDay), end_date: fromUtcDay(endDay) }
+}
+
+export function findNextTermNumber(schoolYear, terms) {
+  const usedNumbers = Array.isArray(terms) ? terms.map((term) => term.term_number) : []
+  return getAllowedTermNumbers(schoolYear?.term_type).find((termNumber) => !usedNumbers.includes(termNumber)) ?? ''
+}
+
+export function hasTermChanged(previousValues, nextValues) {
+  return toTermNumber(previousValues?.term_number) !== toTermNumber(nextValues?.term_number)
+}
+
+// dates may be replaced only while empty or still the earlier suggestion, so the admin's own dates are kept
+export function canReplaceTermDates(formValues, previousSuggestion) {
+  return hasNoDates(formValues) || hasSameDates(formValues, previousSuggestion)
+}
+
+export function withTermDates(formValues, dateRange) {
+  if (dateRange === null) return formValues
+  return { ...formValues, ...dateRange }
+}
+
+export function createSuggestedTermForm(schoolYear, terms) {
+  const termNumber = findNextTermNumber(schoolYear, terms)
+  return { ...createEmptyTermForm(), term_number: termNumber, ...suggestTermDates(schoolYear, termNumber) }
 }
 
 export function buildTermPayload(formValues) {

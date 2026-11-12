@@ -2,12 +2,18 @@ import { describe, it, expect } from 'vitest'
 import {
   buildFormFromTerm,
   buildTermPayload,
+  canReplaceTermDates,
   createEmptyTermForm,
+  createSuggestedTermForm,
+  findNextTermNumber,
   findTermConflictErrors,
   findTermFormErrors,
   getAllowedTermNumbers,
   getTermNumberOptions,
+  hasTermChanged,
   listOtherTerms,
+  suggestTermDates,
+  withTermDates,
 } from '@/utils/termForm.js'
 
 const SEMESTER_YEAR = Object.freeze({
@@ -196,5 +202,87 @@ describe('buildTermPayload', () => {
     })
     expect(termPayload).toEqual({ term_number: 2, start_date: '2030-11-01', end_date: '2031-03-31' })
     expect(Object.keys(termPayload)).toEqual(['term_number', 'start_date', 'end_date'])
+  })
+})
+
+describe('suggestTermDates', () => {
+  it('splits a semester year into two halves', () => {
+    expect(suggestTermDates(SEMESTER_YEAR, 1)).toEqual({ start_date: '2030-06-01', end_date: '2030-11-30' })
+    expect(suggestTermDates(SEMESTER_YEAR, 2)).toEqual({ start_date: '2030-12-01', end_date: '2031-05-31' })
+  })
+
+  it('splits a trimester year into three back-to-back parts that end on the year end', () => {
+    expect(suggestTermDates(TRIMESTER_YEAR, '1')).toEqual({ start_date: '2030-06-01', end_date: '2030-09-30' })
+    expect(suggestTermDates(TRIMESTER_YEAR, '2')).toEqual({ start_date: '2030-10-01', end_date: '2031-01-29' })
+    expect(suggestTermDates(TRIMESTER_YEAR, '3')).toEqual({ start_date: '2031-01-30', end_date: '2031-05-31' })
+  })
+
+  it('returns null for a term number outside the year type or a year without dates', () => {
+    expect(suggestTermDates(SEMESTER_YEAR, 3)).toBeNull()
+    expect(suggestTermDates(SEMESTER_YEAR, '')).toBeNull()
+    expect(suggestTermDates({ ...SEMESTER_YEAR, end_date: '' }, 1)).toBeNull()
+    expect(suggestTermDates(null, 1)).toBeNull()
+  })
+
+  it('suggests dates that pass the form checks', () => {
+    const suggestedForm = { term_number: '2', ...suggestTermDates(TRIMESTER_YEAR, '2') }
+    expect(findTermFormErrors(suggestedForm, TRIMESTER_YEAR)).toEqual({})
+  })
+})
+
+describe('findNextTermNumber', () => {
+  it('returns the lowest unused term number, or empty when all are used', () => {
+    expect(findNextTermNumber(TRIMESTER_YEAR, [])).toBe(1)
+    expect(findNextTermNumber(TRIMESTER_YEAR, [{ term_number: 1 }, { term_number: 3 }])).toBe(2)
+    expect(findNextTermNumber(SEMESTER_YEAR, [{ term_number: 1 }, { term_number: 2 }])).toBe('')
+  })
+})
+
+describe('createSuggestedTermForm', () => {
+  it('preselects the next term with its suggested dates', () => {
+    expect(createSuggestedTermForm(SEMESTER_YEAR, [{ term_number: 1 }])).toEqual({
+      term_number: 2,
+      start_date: '2030-12-01',
+      end_date: '2031-05-31',
+    })
+  })
+
+  it('falls back to an empty form when every term exists', () => {
+    expect(createSuggestedTermForm(SEMESTER_YEAR, [{ term_number: 1 }, { term_number: 2 }])).toEqual(
+      createEmptyTermForm(),
+    )
+  })
+})
+
+describe('hasTermChanged', () => {
+  it('compares term numbers whether they come as numbers or select strings', () => {
+    expect(hasTermChanged({ term_number: 1 }, { term_number: '3' })).toBe(true)
+    expect(hasTermChanged({ term_number: 2 }, { term_number: '2' })).toBe(false)
+  })
+})
+
+describe('canReplaceTermDates', () => {
+  const firstTrimesterDates = Object.freeze({ start_date: '2030-06-01', end_date: '2030-09-30' })
+
+  it('allows replacing empty dates or dates that are still the earlier suggestion', () => {
+    expect(canReplaceTermDates(createEmptyTermForm(), null)).toBe(true)
+    expect(canReplaceTermDates({ term_number: '3', ...firstTrimesterDates }, firstTrimesterDates)).toBe(true)
+  })
+
+  it('keeps dates the admin changed', () => {
+    const editedForm = { term_number: '2', start_date: '2030-06-15', end_date: '2030-09-30' }
+    expect(canReplaceTermDates(editedForm, firstTrimesterDates)).toBe(false)
+  })
+})
+
+describe('withTermDates', () => {
+  it('puts the suggested dates on the form, or leaves it as is without a suggestion', () => {
+    const formValues = { term_number: '3', start_date: '', end_date: '' }
+    expect(withTermDates(formValues, suggestTermDates(TRIMESTER_YEAR, '3'))).toEqual({
+      term_number: '3',
+      start_date: '2031-01-30',
+      end_date: '2031-05-31',
+    })
+    expect(withTermDates(formValues, null)).toBe(formValues)
   })
 })

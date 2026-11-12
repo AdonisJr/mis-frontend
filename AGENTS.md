@@ -122,7 +122,9 @@ src/
                         dateDisplay.js (Y-m-d → "Jun 1, 2026", shared by the school-year table and the Terms modal),
                         termDisplay.js (term types semester/trimester, counts 2/3, labels "1st Semester"… and badge
                         "1st Sem"/"3rd Tri", dialog texts), termForm.js (allowed numbers per type, client rules: number,
-                        dates inside the year, start < end, no overlap, ordering vs other terms; payload without is_active)
+                        dates inside the year, start < end, no overlap, ordering vs other terms; payload without is_active;
+                        date suggestion: the year split into 2 or 3 equal parts, the next unused term preselected on Add,
+                        dates follow the term until the admin edits them)
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
