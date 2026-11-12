@@ -6,11 +6,13 @@ const NO_ACTIVE_TEXT = 'No active SY'
 const LOADING_TEXT = 'Loading SY…'
 const BADGE_PREFIX = 'SY'
 const YEAR_SEPARATOR = '–'
+const TERM_SEPARATOR = ' · '
 
 const props = defineProps({
   startDate: { type: String, default: '' },
   endDate: { type: String, default: '' },
   isLoading: { type: Boolean, default: false },
+  termLabel: { type: String, default: '' },
 })
 
 function extractYear(isoDate) {
@@ -24,7 +26,9 @@ const hasActiveYear = computed(() => Boolean(startYear.value && endYear.value))
 const badgeText = computed(() => {
   if (props.isLoading) return LOADING_TEXT
   if (!hasActiveYear.value) return NO_ACTIVE_TEXT
-  return `${BADGE_PREFIX} ${startYear.value}${YEAR_SEPARATOR}${endYear.value}`
+  const schoolYearText = `${BADGE_PREFIX} ${startYear.value}${YEAR_SEPARATOR}${endYear.value}`
+  if (!props.termLabel) return schoolYearText
+  return schoolYearText + TERM_SEPARATOR + props.termLabel
 })
 </script>
 

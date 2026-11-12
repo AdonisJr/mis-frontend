@@ -1,8 +1,15 @@
 <script setup>
+import { computed } from 'vue'
+import { TERM_TYPE_OPTIONS } from '@/utils/termDisplay.js'
+
 const NAME_FIELD = 'name'
 const START_DATE_FIELD = 'start_date'
 const END_DATE_FIELD = 'end_date'
 const DESCRIPTION_FIELD = 'description'
+const TERM_TYPE_FIELD = 'term_type'
+const TERM_TYPE_LABEL = 'Term type'
+const TERM_TYPE_LOCKED_HINT = 'Locked: this school year already has terms.'
+const TERM_TYPE_HINT_ID = 'school-year-term_type-hint'
 const FIELD_ID_PREFIX = 'school-year-'
 const INPUT_CLASS =
   'w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:bg-page'
@@ -11,6 +18,7 @@ const props = defineProps({
   modelValue: { type: Object, required: true },
   fieldErrors: { type: Object, default: () => ({}) },
   isDisabled: { type: Boolean, default: false },
+  isTermTypeLocked: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -35,6 +43,12 @@ function getDescribedBy(fieldKey) {
   if (!getFieldError(fieldKey)) return undefined
   return getErrorId(fieldKey)
 }
+
+const termTypeDescribedBy = computed(() => {
+  const describedByIds = [getDescribedBy(TERM_TYPE_FIELD), props.isTermTypeLocked ? TERM_TYPE_HINT_ID : undefined]
+  const joinedIds = describedByIds.filter(Boolean).join(' ')
+  return joinedIds || undefined
+})
 </script>
 
 <template>
@@ -88,6 +102,30 @@ function getDescribedBy(fieldKey) {
           {{ getFieldError(END_DATE_FIELD) }}
         </p>
       </div>
+    </div>
+    <div>
+      <label :for="getFieldId(TERM_TYPE_FIELD)" class="mb-1 block text-sm font-semibold text-ink">
+        {{ TERM_TYPE_LABEL }}
+      </label>
+      <select
+        :id="getFieldId(TERM_TYPE_FIELD)"
+        :value="modelValue[TERM_TYPE_FIELD]"
+        :class="INPUT_CLASS"
+        :disabled="isDisabled || isTermTypeLocked"
+        :aria-invalid="Boolean(getFieldError(TERM_TYPE_FIELD))"
+        :aria-describedby="termTypeDescribedBy"
+        @change="updateField(TERM_TYPE_FIELD, $event.target.value)"
+      >
+        <option v-for="termTypeOption in TERM_TYPE_OPTIONS" :key="termTypeOption.value" :value="termTypeOption.value">
+          {{ termTypeOption.label }}
+        </option>
+      </select>
+      <p v-if="isTermTypeLocked" :id="TERM_TYPE_HINT_ID" class="mt-1 text-xs text-ink-muted">
+        {{ TERM_TYPE_LOCKED_HINT }}
+      </p>
+      <p v-if="getFieldError(TERM_TYPE_FIELD)" :id="getErrorId(TERM_TYPE_FIELD)" class="mt-1 text-xs text-red-700">
+        {{ getFieldError(TERM_TYPE_FIELD) }}
+      </p>
     </div>
     <div>
       <label :for="getFieldId(DESCRIPTION_FIELD)" class="mb-1 block text-sm font-semibold text-ink">

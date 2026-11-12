@@ -10,10 +10,12 @@ import { LOGIN_ROUTE_NAME } from '@/routeNames.js'
 import { HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { useAuthStore } from '@/stores/authStore.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
+import { buildActiveTermBadgeLabel } from '@/utils/termDisplay.js'
 
 const LOGOUT_SUCCESS_MESSAGE = 'Logged out.'
 const LOGOUT_FAILED_MESSAGE = 'Could not reach the server; you have been logged out on this device.'
 const ACTIVE_SCHOOL_YEAR_LOAD_FAILED_MESSAGE = 'Could not load the active school year.'
+const ACTIVE_TERM_LOAD_FAILED_MESSAGE = 'Could not load the active term.'
 
 const emit = defineEmits(['open-drawer'])
 
@@ -28,6 +30,9 @@ const toast = useToast()
 
 const pageTitle = computed(() => route.meta.title ?? '')
 const navGroupLabel = computed(() => findNavGroupLabel(route.name))
+const activeTermLabel = computed(() =>
+  buildActiveTermBadgeLabel(schoolYearStore.activeSchoolYear, schoolYearStore.activeTerm),
+)
 
 async function logoutAndRedirect() {
   if (isLoggingOut.value) return
@@ -40,6 +45,7 @@ async function logoutAndRedirect() {
   } finally {
     isLoggingOut.value = false
     schoolYearStore.clearActiveSchoolYear()
+    schoolYearStore.clearActiveTerm()
     router.push({ name: LOGIN_ROUTE_NAME })
   }
 }
@@ -54,11 +60,28 @@ async function loadActiveSchoolYearBadge() {
   }
 }
 
+async function loadActiveTermBadge() {
+  try {
+    await schoolYearStore.loadActiveTerm()
+  } catch (error) {
+    // http.js already toasted the ended session and redirected to login
+    if (error.response?.status === HTTP_UNAUTHORIZED) return
+    toast.error(ACTIVE_TERM_LOAD_FAILED_MESSAGE)
+  }
+}
+
+async function loadTopBarBadge() {
+  await loadActiveSchoolYearBadge()
+  // an active term always belongs to the active school year, so without one there is nothing to load
+  if (!schoolYearStore.activeSchoolYear) return
+  await loadActiveTermBadge()
+}
+
 function focusMenuButton() {
   menuButton.value?.focus()
 }
 
-onMounted(loadActiveSchoolYearBadge)
+onMounted(loadTopBarBadge)
 
 defineExpose({ focusMenuButton })
 </script>
@@ -84,6 +107,7 @@ defineExpose({ focusMenuButton })
       :start-date="schoolYearStore.activeSchoolYear?.start_date ?? ''"
       :end-date="schoolYearStore.activeSchoolYear?.end_date ?? ''"
       :is-loading="schoolYearStore.isActiveSchoolYearLoading"
+      :term-label="activeTermLabel"
     />
     <UserMenu
       :user-name="authStore.user?.name ?? ''"
