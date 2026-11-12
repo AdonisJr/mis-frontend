@@ -6,6 +6,7 @@ import {
   GraduationCap,
   IdCard,
   LayoutDashboard,
+  LayoutGrid,
   Users,
 } from '@lucide/vue'
 import {
@@ -16,6 +17,7 @@ import {
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
+  SECTIONS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
@@ -36,6 +38,7 @@ export const NAV_ITEMS = [
   { label: 'Records', group: ATTENDANCE_GROUP, icon: ClipboardList, routeName: ATTENDANCE_RECORDS_ROUTE_NAME, roles: ROUTE_ROLES[ATTENDANCE_RECORDS_ROUTE_NAME] },
   { label: 'School Years', group: SETUP_GROUP, icon: CalendarRange, routeName: SCHOOL_YEARS_ROUTE_NAME, roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME] },
   { label: 'Programs', group: SETUP_GROUP, icon: BookOpen, routeName: PROGRAMS_ROUTE_NAME, roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME] },
+  { label: 'Sections', group: SETUP_GROUP, icon: LayoutGrid, routeName: SECTIONS_ROUTE_NAME, roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {
