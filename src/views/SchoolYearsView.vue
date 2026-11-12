@@ -1,11 +1,12 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useToast } from 'vue-toastification'
-import { CircleCheck, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { CalendarDays, CircleCheck, Pencil, Plus, Trash2 } from '@lucide/vue'
 import DataTable from '@/components/DataTable.vue'
 import Modal from '@/components/modal/Modal.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
 import SchoolYearFormFields from '@/components/SchoolYearFormFields.vue'
+import SchoolYearTermsView from '@/views/SchoolYearTermsView.vue'
 import {
   activateSchoolYear,
   createSchoolYear,
@@ -15,6 +16,8 @@ import {
 } from '@/services/schoolYearService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
+import { formatDisplayDate } from '@/utils/dateDisplay.js'
+import { TERM_TYPE_SEMESTER } from '@/utils/termDisplay.js'
 
 const SCHOOL_YEAR_COLUMNS = [
   { key: 'name', label: 'Name' },
@@ -33,13 +36,6 @@ const DELETE_TITLE = 'Delete school year'
 const DELETE_CONFIRM_LABEL = 'Delete'
 const ACTIVE_CHIP = { label: 'Active', colorClass: 'bg-green-100 text-green-800' }
 const INACTIVE_CHIP = { label: 'Inactive', colorClass: 'bg-slate-200 text-slate-700' }
-const DATE_PATTERN = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/
-const DISPLAY_DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
 const HTTP_UNPROCESSABLE_ENTITY = 422
 const HTTP_NOT_FOUND = 404
 
@@ -63,7 +59,7 @@ const PRIMARY_BUTTON_CLASS =
   'inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent/90 focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60'
 
 function createEmptySchoolYearForm() {
-  return { name: '', start_date: '', end_date: '', description: '' }
+  return { name: '', start_date: '', end_date: '', description: '', term_type: TERM_TYPE_SEMESTER }
 }
 
 function buildFormFromSchoolYear(schoolYear) {
@@ -72,6 +68,7 @@ function buildFormFromSchoolYear(schoolYear) {
     start_date: schoolYear.start_date,
     end_date: schoolYear.end_date,
     description: schoolYear.description ?? '',
+    term_type: schoolYear.term_type ?? TERM_TYPE_SEMESTER,
   }
 }
 
@@ -90,14 +87,8 @@ function buildSchoolYearPayload(formValues) {
     start_date: formValues.start_date,
     end_date: formValues.end_date,
     description: trimmedDescription || null,
+    term_type: formValues.term_type,
   }
-}
-
-function formatSchoolYearDate(isoDate) {
-  const dateParts = isoDate?.match(DATE_PATTERN)?.groups
-  if (!dateParts) return isoDate
-  const utcTimestamp = Date.UTC(Number(dateParts.year), Number(dateParts.month) - 1, Number(dateParts.day))
-  return DISPLAY_DATE_FORMAT.format(utcTimestamp)
 }
 
 function getStatusChip(isActive) {
@@ -115,11 +106,13 @@ const isSaving = ref(false)
 const deletingSchoolYear = ref(null)
 const isDeleting = ref(false)
 const activatingSchoolYearId = ref(null)
+const termsSchoolYear = ref(null)
 
 const toast = useToast()
 const schoolYearStore = useSchoolYearStore()
 
 const formTitle = computed(() => (editingSchoolYear.value ? EDIT_TITLE : ADD_TITLE))
+const isTermTypeLocked = computed(() => (editingSchoolYear.value?.terms_count ?? 0) > 0)
 const isConfirmOpen = computed(() => deletingSchoolYear.value !== null)
 const deleteMessage = computed(() => {
   if (!deletingSchoolYear.value) return ''
@@ -250,6 +243,8 @@ async function activateRow(schoolYear) {
   try {
     const activateResponse = await activateSchoolYear(schoolYear.id)
     schoolYearStore.replaceActiveSchoolYear(activateResponse?.school_year)
+    // the backend clears the active term when a different school year becomes active
+    schoolYearStore.clearActiveTerm()
     toast.success(ACTIVATE_SUCCESS_MESSAGE)
   } catch (error) {
     toastRequestError(error, ACTIVATE_FAILED_MESSAGE)
@@ -257,6 +252,14 @@ async function activateRow(schoolYear) {
     activatingSchoolYearId.value = null
     loadSchoolYears()
   }
+}
+
+function openTerms(schoolYear) {
+  termsSchoolYear.value = schoolYear
+}
+
+function closeTerms() {
+  termsSchoolYear.value = null
 }
 
 onMounted(loadSchoolYears)
@@ -282,10 +285,10 @@ onMounted(loadSchoolYears)
         <span class="block max-w-64 truncate font-semibold" :title="value">{{ value }}</span>
       </template>
       <template #cell-start_date="{ value }">
-        <span class="whitespace-nowrap tabular-nums">{{ formatSchoolYearDate(value) }}</span>
+        <span class="whitespace-nowrap tabular-nums">{{ formatDisplayDate(value) }}</span>
       </template>
       <template #cell-end_date="{ value }">
-        <span class="whitespace-nowrap tabular-nums">{{ formatSchoolYearDate(value) }}</span>
+        <span class="whitespace-nowrap tabular-nums">{{ formatDisplayDate(value) }}</span>
       </template>
       <template #cell-description="{ value }">
         <span v-if="value" class="block max-w-80 truncate text-ink-muted" :title="value">{{ value }}</span>
@@ -309,6 +312,16 @@ onMounted(loadSchoolYears)
           >
             <CircleCheck :size="16" aria-hidden="true" />
             <span class="hidden sm:inline">{{ activatingSchoolYearId === row.id ? 'Setting…' : 'Set active' }}</span>
+          </button>
+          <button
+            type="button"
+            :class="SECONDARY_BUTTON_CLASS"
+            class="text-ink"
+            :aria-label="`Terms of ${row.name}`"
+            @click="openTerms(row)"
+          >
+            <CalendarDays :size="16" aria-hidden="true" />
+            <span class="hidden sm:inline">Terms</span>
           </button>
           <button
             type="button"
@@ -343,6 +356,7 @@ onMounted(loadSchoolYears)
         :model-value="formValues"
         :field-errors="fieldErrors"
         :is-disabled="isSaving"
+        :is-term-type-locked="isTermTypeLocked"
         @update:model-value="updateFormValues"
       />
     </form>
@@ -365,5 +379,11 @@ onMounted(loadSchoolYears)
     :is-loading="isDeleting"
     @confirm="confirmDelete"
     @cancel="cancelDelete"
+  />
+
+  <SchoolYearTermsView
+    :school-year="termsSchoolYear"
+    @close="closeTerms"
+    @terms-changed="loadSchoolYears"
   />
 </template>

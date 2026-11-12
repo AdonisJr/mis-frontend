@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -46,6 +46,9 @@ src/
                       schoolYearService.js — fetchSchoolYears, createSchoolYear, updateSchoolYear,
                         deleteSchoolYear, activateSchoolYear, fetchActiveSchoolYear on /school-years (list
                         {school_years}, item {school_year}, Y-m-d dates)
+                      termService.js — fetchTerms + createTerm on /school-years/{id}/terms, updateTerm + deleteTerm on
+                        /terms/{id}, activateTerm (body-less PUT /terms/set-active/{id}), fetchActiveTerm GET
+                        /terms/get-active (list {terms}, item {term}, active {term} or {term: null}; never sends is_active)
                       studentService.js — fetchStudents (params page, search, grade_level), createStudent,
                         updateStudent, deleteStudent on /students (list {students, meta}, item {student},
                         204 delete; never sends rfid or user_id)
@@ -61,17 +64,18 @@ src/
                       authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
                         landingRouteName (admin → Dashboard, registrar → Students, admin first, else null);
                         the only code that touches localStorage (keys mis_auth_token, mis_auth_user)
-                      schoolYearStore.js → useSchoolYearStore: activeSchoolYear for the top-bar badge, loaded
-                        by MainTopBar on shell mount, replaced after set-active / editing the active row,
-                        cleared on logout; no localStorage
+                      schoolYearStore.js → useSchoolYearStore: activeSchoolYear + activeTerm for the top-bar badge,
+                        loaded by MainTopBar on shell mount (term only when a school year is active), replaced after
+                        set-active / editing the active row or term; activeTerm cleared after a school-year set-active;
+                        both cleared on logout; no localStorage
   components/         PascalCase presentational SFCs (groups like modal/); UserMenu.vue (name, roles,
                         Logout emit), EmptyState.vue ("Coming in a later ticket");
                         reusable, no service/store imports: DataTable.vue (columns/rows/rowKey/emptyText/
                         isLoading, cell-<key> + actions slots; DataTableRow.vue is internal), modal/Modal.vue
                         (isOpen/title, close emit, default + footer slots, document-level Escape, focus
                         trap/return), modal/ConfirmDialog.vue (on Modal; confirm/cancel emits);
-                        SchoolYearFormFields.vue (name/start/end/description inputs with 422 field errors),
-                        SchoolYearBadge.vue (top-bar "SY 2026–2027" / "No active SY")
+                        SchoolYearFormFields.vue (name/start/end/term type/description with 422 field errors; term type locked when terms_count > 0),
+                        SchoolYearBadge.vue (top-bar "SY 2026–2027" / "SY 2026–2027 · 1st Sem" / "No active SY")
                         StudentFormFields.vue (13 student inputs, Level + "Section / course" with hint,
                         422 field errors, never rfid), StudentFilterBar.vue (search box + Level filter,
                         "All levels"), TablePagination.vue (generic pager from list meta, change-page emit)
@@ -82,11 +86,15 @@ src/
                         ProgramFilterBar.vue (search + Stage "All stages" + Status "All statuses"),
                         ProgramFormFields.vue (code/stage/name/description with 422 errors, no is_active),
                         ProgramRowActions.vue (Edit / Deactivate or Reactivate / Delete row buttons, emits only)
+                        TermFormFields.vue (term select limited to the year's type + start/end dates with 422 errors),
+                        TermRowActions.vue (icon-only Set active / Edit / Delete, emits only; Delete disabled for the active term)
   views/              every page flat as <Name>View.vue, no role subfolders (roles per route via
                         src/routeRoles.js); LoginView.vue (/login, public); placeholders DashboardView
                         (/dashboard), RfidCardsView (/rfid-cards), AttendanceTodayView (/attendance/today),
                         AttendanceRecordsView (/attendance/records);
-                        SchoolYearsView (/school-years, admin) — school-year table + CRUD + set-active;
+                        SchoolYearsView (/school-years, admin) — school-year table + CRUD + set-active + term type +
+                        Terms row action; SchoolYearTermsView (embedded in SchoolYearsView, not routed: the Terms modal —
+                        list, add/edit, delete, set active, one dialog open at a time, calls termService + toasts);
                         StudentsView (/students, admin + registrar) — paginated student table, search, level
                         filter, add/edit/delete; EmployeesView (/employees, admin) — paginated staff-account
                         table, search, role + status filters, add/edit, reset password, deactivate/reactivate
@@ -96,7 +104,7 @@ src/
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; MainTopBar.vue = menu button,
                         breadcrumb, page title (meta.title), SchoolYearBadge (both roles; loads the active
-                        school year on mount), UserMenu + logout flow;
+                        school year, then the active term, on mount), UserMenu + logout flow;
                         layout/sidebar/MainSidebar.vue + navConfig.js (one NAV_ITEMS config, items
                         filtered by the user's roles)
   utils/              pure JS helpers (no Vue, DOM or HTTP imports), each with a co-located <name>.test.js:
@@ -111,6 +119,10 @@ src/
                         programForm.js (stage options SHS/College, code max 20, description max 1000, client errors,
                         upper-cased code payload without is_active), programSearch.js (filters → page/search/stage/status params;
                         reuses studentSearch.js and the employee status options/chip)
+                        dateDisplay.js (Y-m-d → "Jun 1, 2026", shared by the school-year table and the Terms modal),
+                        termDisplay.js (term types semester/trimester, counts 2/3, labels "1st Semester"… and badge
+                        "1st Sem"/"3rd Tri", dialog texts), termForm.js (allowed numbers per type, client rules: number,
+                        dates inside the year, start < end, no overlap, ordering vs other terms; payload without is_active)
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
