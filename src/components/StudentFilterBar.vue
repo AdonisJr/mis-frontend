@@ -1,5 +1,5 @@
 <script setup>
-import { STUDENT_GRADE_LEVELS, TEXT_MAX_LENGTH } from '@/utils/studentForm.js'
+import { TEXT_MAX_LENGTH } from '@/utils/studentForm.js'
 
 const SEARCH_LABEL = 'Search'
 const SEARCH_PLACEHOLDER = 'LRN or name'
@@ -12,10 +12,11 @@ const INPUT_CLASS =
 
 defineProps({
   search: { type: String, required: true },
-  gradeLevel: { type: String, required: true },
+  gradeLevelId: { type: String, required: true },
+  gradeLevels: { type: Array, required: true },
 })
 
-const emit = defineEmits(['update:search', 'update:gradeLevel'])
+const emit = defineEmits(['update:search', 'update:gradeLevelId'])
 </script>
 
 <template>
@@ -36,13 +37,13 @@ const emit = defineEmits(['update:search', 'update:gradeLevel'])
       <label :for="LEVEL_FILTER_ID" class="mb-1 block text-sm font-semibold text-ink">{{ LEVEL_FILTER_LABEL }}</label>
       <select
         :id="LEVEL_FILTER_ID"
-        :value="gradeLevel"
+        :value="gradeLevelId"
         :class="INPUT_CLASS"
-        @change="emit('update:gradeLevel', $event.target.value)"
+        @change="emit('update:gradeLevelId', $event.target.value)"
       >
         <option value="">{{ ALL_LEVELS_LABEL }}</option>
-        <option v-for="gradeLevelOption in STUDENT_GRADE_LEVELS" :key="gradeLevelOption" :value="gradeLevelOption">
-          {{ gradeLevelOption }}
+        <option v-for="gradeLevel in gradeLevels" :key="gradeLevel.id" :value="String(gradeLevel.id)">
+          {{ gradeLevel.name }}
         </option>
       </select>
     </div>

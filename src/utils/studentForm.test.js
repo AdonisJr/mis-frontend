@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import {
   STUDENT_FORM_FIELDS,
   STUDENT_GENDER_OPTIONS,
-  STUDENT_GRADE_LEVELS,
   buildFormFromStudent,
   buildStudentPayload,
   createEmptyStudentForm,
@@ -19,8 +18,6 @@ function buildCompleteForm() {
     last_name: 'Dela Cruz',
     birth_date: '2010-05-14',
     gender: 'female',
-    grade_level: 'Grade 10',
-    section: 'Rizal',
     address: 'Quezon City',
     contact: '09171234567',
     guardian_name: 'Maria Dela Cruz',
@@ -28,23 +25,6 @@ function buildCompleteForm() {
     guardian_contact: '09181234567',
   }
 }
-
-describe('STUDENT_GRADE_LEVELS', () => {
-  it('lists the ten levels in contract order', () => {
-    expect(STUDENT_GRADE_LEVELS).toEqual([
-      'Grade 7',
-      'Grade 8',
-      'Grade 9',
-      'Grade 10',
-      'Grade 11',
-      'Grade 12',
-      '1st Year College',
-      '2nd Year College',
-      '3rd Year College',
-      '4th Year College',
-    ])
-  })
-})
 
 describe('STUDENT_GENDER_OPTIONS', () => {
   it('offers male and female with Male and Female labels', () => {
@@ -56,10 +36,10 @@ describe('STUDENT_GENDER_OPTIONS', () => {
 })
 
 describe('createEmptyStudentForm', () => {
-  it('returns the thirteen form fields as empty strings', () => {
+  it('returns the eleven form fields as empty strings', () => {
     const emptyForm = createEmptyStudentForm()
     expect(Object.keys(emptyForm)).toEqual([...STUDENT_FORM_FIELDS])
-    expect(Object.keys(emptyForm)).toHaveLength(13)
+    expect(Object.keys(emptyForm)).toHaveLength(11)
     expect(Object.values(emptyForm).every((fieldValue) => fieldValue === '')).toBe(true)
   })
 })
@@ -93,18 +73,16 @@ describe('findStudentFormErrors', () => {
     expect(findStudentFormErrors(buildCompleteForm())).toEqual({})
   })
 
-  it('flags the ten required fields when the form is empty', () => {
+  it('flags the eight required fields when the form is empty', () => {
     const formErrors = findStudentFormErrors(createEmptyStudentForm())
-    expect(Object.keys(formErrors)).toHaveLength(10)
+    expect(Object.keys(formErrors)).toHaveLength(8)
     expect(formErrors.lrn).toEqual(['LRN is required.'])
-    expect(formErrors.grade_level).toEqual(['Level is required.'])
-    expect(formErrors.section).toEqual(['Section / course is required.'])
     expect(formErrors.guardian_contact).toEqual(['Guardian contact is required.'])
   })
 
   it('treats whitespace-only values as missing', () => {
-    const formErrors = findStudentFormErrors({ ...buildCompleteForm(), first_name: '   ', section: '\t' })
-    expect(formErrors).toEqual({ first_name: ['First name is required.'], section: ['Section / course is required.'] })
+    const formErrors = findStudentFormErrors({ ...buildCompleteForm(), first_name: '   ', guardian_name: '\t' })
+    expect(formErrors).toEqual({ first_name: ['First name is required.'], guardian_name: ['Guardian name is required.'] })
   })
 
   it('leaves middle_name, address and contact optional', () => {
@@ -125,12 +103,11 @@ describe('findStudentFormErrors', () => {
 
 describe('buildStudentPayload', () => {
   it('trims every value and keeps the LRN as a string', () => {
-    const paddedForm = { ...buildCompleteForm(), lrn: ' 000000000123 ', first_name: '  Andrea ', section: ' Rizal ' }
+    const paddedForm = { ...buildCompleteForm(), lrn: ' 000000000123 ', first_name: '  Andrea ' }
     const studentPayload = buildStudentPayload(paddedForm)
     expect(studentPayload.lrn).toBe('000000000123')
     expect(typeof studentPayload.lrn).toBe('string')
     expect(studentPayload.first_name).toBe('Andrea')
-    expect(studentPayload.section).toBe('Rizal')
   })
 
   it('sends blank optional fields as null', () => {

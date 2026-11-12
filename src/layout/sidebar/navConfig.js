@@ -3,6 +3,7 @@ import {
   CalendarCheck,
   CalendarRange,
   ClipboardList,
+  ClipboardPen,
   GraduationCap,
   IdCard,
   LayoutDashboard,
@@ -14,6 +15,7 @@ import {
   ATTENDANCE_TODAY_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
+  ENROLLMENT_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
@@ -32,6 +34,7 @@ export const NAV_ROW_ITEM = 'item'
 export const NAV_ITEMS = [
   { label: 'Dashboard', group: null, icon: LayoutDashboard, routeName: DASHBOARD_ROUTE_NAME, roles: ROUTE_ROLES[DASHBOARD_ROUTE_NAME] },
   { label: 'Students', group: PEOPLE_GROUP, icon: GraduationCap, routeName: STUDENTS_ROUTE_NAME, roles: ROUTE_ROLES[STUDENTS_ROUTE_NAME] },
+  { label: 'Enrollment', group: PEOPLE_GROUP, icon: ClipboardPen, routeName: ENROLLMENT_ROUTE_NAME, roles: ROUTE_ROLES[ENROLLMENT_ROUTE_NAME] },
   { label: 'Employees', group: PEOPLE_GROUP, icon: Users, routeName: EMPLOYEES_ROUTE_NAME, roles: ROUTE_ROLES[EMPLOYEES_ROUTE_NAME] },
   { label: 'RFID Cards', group: PEOPLE_GROUP, icon: IdCard, routeName: RFID_CARDS_ROUTE_NAME, roles: ROUTE_ROLES[RFID_CARDS_ROUTE_NAME] },
   { label: 'Today', group: ATTENDANCE_GROUP, icon: CalendarCheck, routeName: ATTENDANCE_TODAY_ROUTE_NAME, roles: ROUTE_ROLES[ATTENDANCE_TODAY_ROUTE_NAME] },

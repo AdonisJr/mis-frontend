@@ -9,6 +9,7 @@ import StudentFilterBar from '@/components/StudentFilterBar.vue'
 import StudentFormFields from '@/components/StudentFormFields.vue'
 import TablePagination from '@/components/TablePagination.vue'
 import { createStudent, deleteStudent, fetchStudents, updateStudent } from '@/services/studentService.js'
+import { fetchGradeLevels } from '@/services/gradeLevelService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import {
   FIRST_PAGE,
@@ -26,11 +27,12 @@ import {
   createEmptyStudentForm,
   findStudentFormErrors,
 } from '@/utils/studentForm.js'
+import { formatCurrentEnrollment } from '@/utils/enrollmentDisplay.js'
 
 const STUDENT_COLUMNS = [
   { key: 'lrn', label: 'LRN' },
   { key: 'name', label: 'Name' },
-  { key: 'level_section', label: 'Level & section' },
+  { key: 'current_enrollment', label: 'Current section' },
   { key: 'guardian_contact', label: 'Guardian contact' },
   { key: 'rfid', label: 'RFID' },
 ]
@@ -40,7 +42,6 @@ const EMPTY_TEXT = 'No students yet.'
 const NO_MATCH_TEXT = 'No students match the search or level.'
 const NO_CARD_TEXT = 'No card'
 const NAME_SEPARATOR = ', '
-const LEVEL_SECTION_SEPARATOR = ' · '
 const ADD_TITLE = 'Add student'
 const EDIT_TITLE = 'Edit student'
 const DELETE_TITLE = 'Delete student'
@@ -50,6 +51,7 @@ const HTTP_UNPROCESSABLE_ENTITY = 422
 const HTTP_NOT_FOUND = 404
 
 const LOAD_FAILED_MESSAGE = 'Could not load students.'
+const GRADE_LEVELS_FAILED_MESSAGE = 'Could not load grade levels.'
 const INVALID_FIELDS_MESSAGE = 'Check the highlighted fields.'
 const CREATE_SUCCESS_MESSAGE = 'Student added.'
 const UPDATE_SUCCESS_MESSAGE = 'Student updated.'
@@ -73,14 +75,10 @@ function formatStudentName(student) {
   return `${fullName} ${middleName.charAt(0).toUpperCase()}.`
 }
 
-function formatLevelAndSection(student) {
-  if (!(student.section ?? '').trim()) return student.grade_level
-  return `${student.grade_level}${LEVEL_SECTION_SEPARATOR}${student.section}`
-}
-
 const students = ref([])
 const pageMeta = ref(createEmptyPageMeta())
 const studentFilters = ref(createStudentFilters())
+const gradeLevels = ref([])
 const searchInput = ref('')
 const isListLoading = ref(false)
 const isFormOpen = ref(false)
@@ -103,7 +101,7 @@ const deleteMessage = computed(() => {
   return `Delete ${formatStudentName(student)} (LRN ${student.lrn})? This cannot be undone.`
 })
 const emptyText = computed(() => {
-  const hasActiveFilter = studentFilters.value.search !== '' || studentFilters.value.gradeLevel !== ''
+  const hasActiveFilter = studentFilters.value.search !== '' || studentFilters.value.gradeLevelId !== ''
   return hasActiveFilter ? NO_MATCH_TEXT : EMPTY_TEXT
 })
 
@@ -135,6 +133,15 @@ async function loadStudents() {
   }
 }
 
+async function loadGradeLevels() {
+  try {
+    const gradeLevelResponse = await fetchGradeLevels()
+    gradeLevels.value = gradeLevelResponse?.grade_levels ?? []
+  } catch (error) {
+    toastRequestError(error, GRADE_LEVELS_FAILED_MESSAGE)
+  }
+}
+
 function applySearch() {
   if (normalizeSearchText(searchInput.value) === studentFilters.value.search) return
   studentFilters.value = applySearchChange(studentFilters.value, searchInput.value)
@@ -151,8 +158,8 @@ function cancelPendingSearch() {
   clearTimeout(searchDebounceTimer)
 }
 
-function changeGradeLevel(nextGradeLevel) {
-  studentFilters.value = applyGradeLevelChange(studentFilters.value, nextGradeLevel)
+function changeGradeLevel(nextGradeLevelId) {
+  studentFilters.value = applyGradeLevelChange(studentFilters.value, nextGradeLevelId)
   loadStudents()
 }
 
@@ -254,7 +261,10 @@ async function confirmDelete() {
   }
 }
 
-onMounted(loadStudents)
+onMounted(() => {
+  loadStudents()
+  loadGradeLevels()
+})
 onBeforeUnmount(cancelPendingSearch)
 </script>
 
@@ -269,9 +279,10 @@ onBeforeUnmount(cancelPendingSearch)
     </div>
     <StudentFilterBar
       :search="searchInput"
-      :grade-level="studentFilters.gradeLevel"
+      :grade-level-id="studentFilters.gradeLevelId"
+      :grade-levels="gradeLevels"
       @update:search="updateSearchInput"
-      @update:grade-level="changeGradeLevel"
+      @update:grade-level-id="changeGradeLevel"
     />
     <DataTable
       :columns="STUDENT_COLUMNS"
@@ -288,8 +299,9 @@ onBeforeUnmount(cancelPendingSearch)
           {{ formatStudentName(row) }}
         </span>
       </template>
-      <template #cell-level_section="{ row }">
-        <span class="whitespace-nowrap">{{ formatLevelAndSection(row) }}</span>
+      <template #cell-current_enrollment="{ row }">
+        <span v-if="row.current_enrollment" class="whitespace-nowrap">{{ formatCurrentEnrollment(row) }}</span>
+        <span v-else class="whitespace-nowrap text-ink-muted">{{ formatCurrentEnrollment(row) }}</span>
       </template>
       <template #cell-guardian_contact="{ value }">
         <span class="whitespace-nowrap tabular-nums">{{ value }}</span>

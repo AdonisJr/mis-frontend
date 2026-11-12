@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12), and the enrollment page (enroll a student into a section, move, drop/transfer/complete; the Students page shows the current section) (mis-13); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -49,9 +49,9 @@ src/
                       termService.js — fetchTerms + createTerm on /school-years/{id}/terms, updateTerm + deleteTerm on
                         /terms/{id}, activateTerm (body-less PUT /terms/set-active/{id}), fetchActiveTerm GET
                         /terms/get-active (list {terms}, item {term}, active {term} or {term: null}; never sends is_active)
-                      studentService.js — fetchStudents (params page, search, grade_level), createStudent,
+                      studentService.js — fetchStudents (params page, search, grade_level_id), createStudent,
                         updateStudent, deleteStudent on /students (list {students, meta}, item {student},
-                        204 delete; never sends rfid or user_id)
+                        204 delete; rows carry current_enrollment instead of grade_level/section; never sends rfid or user_id)
                       employeeService.js — fetchEmployees (params page, search, role, status), createEmployee,
                         updateEmployee, setEmployeePassword (/password), deactivateEmployee, reactivateEmployee
                         (body-less PUT /deactivate, /reactivate) on /employees (list {employees, meta}, item {employee})
@@ -63,6 +63,11 @@ src/
                       sectionService.js — fetchSections (params school_year_id required, grade_level_id, program_id, search,
                         page), createSection, updateSection, deleteSection (204) on /sections (list {sections, meta}, item
                         {section} with grade_level {id, name, stage} and program {id, code, name} or null)
+                        fetchAllSections (every page of GET /sections with the given params, page 1…meta.last_page → {sections}; each row has
+                        enrolled_count, per term when term_id is sent)
+                      enrollmentService.js — fetchEnrollments (params school_year_id required, term_id, section_id, grade_level_id, status,
+                        search, page), enrollStudent POST, moveEnrollment PUT /enrollments/{id}/move, dropEnrollment, transferEnrollment,
+                        completeEnrollment (body-less PUT /drop, /transfer, /complete) on /enrollments (list {enrollments, meta}, item {enrollment})
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
                       authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
@@ -80,8 +85,8 @@ src/
                         trap/return), modal/ConfirmDialog.vue (on Modal; confirm/cancel emits);
                         SchoolYearFormFields.vue (name/start/end/term type/description with 422 field errors; term type locked when terms_count > 0),
                         SchoolYearBadge.vue (top-bar "SY 2026–2027" / "SY 2026–2027 · 1st Sem" / "No active SY")
-                        StudentFormFields.vue (13 student inputs, Level + "Section / course" with hint,
-                        422 field errors, never rfid), StudentFilterBar.vue (search box + Level filter,
+                        StudentFormFields.vue (11 student inputs, no level/section,
+                        422 field errors, never rfid), StudentFilterBar.vue (search box + Level filter from the grade levels,
                         "All levels"), TablePagination.vue (generic pager from list meta, change-page emit)
                         EmployeeFilterBar.vue (search + Role "All roles" + Status "All statuses"),
                         EmployeeFormFields.vue (name/email/contact, role checkboxes with lockedRoles, Add-only
@@ -95,6 +100,10 @@ src/
                         SectionFilterBar.vue (search + School year (no "All") + Grade level "All grade levels" + Program "All programs"),
                         SectionFormFields.vue (school year/grade level/program/name/capacity/room with 422 errors; program select
                         disabled with a hint for JHS), SectionRowActions.vue (Edit / Delete row buttons, emits only)
+                        EnrollmentFilterBar.vue (search + School year + Term "All terms" + Grade level + Section + Status "All statuses"),
+                        EnrollmentFormFields.vue (student search + pick, section with seats, term for SHS/college, date, remarks, 422 errors),
+                        EnrollmentMoveFields.vue (current section, new section, end date, remarks), EnrollmentRowActions.vue (Move / Drop /
+                        Transfer / Complete for an enrolled row only, emits only)
   views/              every page flat as <Name>View.vue, no role subfolders (roles per route via
                         src/routeRoles.js); LoginView.vue (/login, public); placeholders DashboardView
                         (/dashboard), RfidCardsView (/rfid-cards), AttendanceTodayView (/attendance/today),
@@ -102,14 +111,17 @@ src/
                         SchoolYearsView (/school-years, admin) — school-year table + CRUD + set-active + term type +
                         Terms row action; SchoolYearTermsView (embedded in SchoolYearsView, not routed: the Terms modal —
                         list, add/edit, delete, set active, one dialog open at a time, calls termService + toasts);
-                        StudentsView (/students, admin + registrar) — paginated student table, search, level
-                        filter, add/edit/delete; EmployeesView (/employees, admin) — paginated staff-account
+                        StudentsView (/students, admin + registrar) — paginated student table (Current section column), search, level
+                        filter from the grade levels, add/edit/delete; EmployeesView (/employees, admin) — paginated staff-account
                         table, search, role + status filters, add/edit, reset password, deactivate/reactivate
                         (own row: no deactivate, admin role locked); ProgramsView (/programs, admin, Setup) —
                         paginated program table, search, stage + status filters, add/edit, deactivate/reactivate,
                         delete; SectionsView (/sections, admin, Setup) — paginated section table, school year filter
                         (active year, else newest; empty state without school years), grade level + program filters,
-                        name search, add/edit, delete; NotFoundView (404 + Root)
+                        name search, add/edit, delete; EnrollmentView (/enrollment, admin + registrar, People) — paginated enrollment table,
+                        school year (active, else newest) + term (active, else All terms) + grade level + section + status filters, student search,
+                        Enroll, Move, Drop / Transfer / Complete (ConfirmDialog); EnrollmentEnrollModalView + EnrollmentMoveModalView (embedded in
+                        EnrollmentView, not routed: the two modals, they call the services and toast); NotFoundView (404 + Root)
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; MainTopBar.vue = menu button,
                         breadcrumb, page title (meta.title), SchoolYearBadge (both roles; loads the active
@@ -117,8 +129,8 @@ src/
                         layout/sidebar/MainSidebar.vue + navConfig.js (one NAV_ITEMS config, items
                         filtered by the user's roles)
   utils/              pure JS helpers (no Vue, DOM or HTTP imports), each with a co-located <name>.test.js:
-                        studentSearch.js (filters → list params, page reset on new search/level),
-                        studentForm.js (grade-level + gender lists, field labels, empty/edit form, required +
+                        studentSearch.js (filters → list params incl. grade_level_id, page reset on new search/level),
+                        studentForm.js (gender list, field labels, empty/edit form, required +
                         12-digit LRN errors in Laravel {field: [msg]} shape, payload without rfid)
                         employeeSearch.js (filters → page/search/role/status params; reuses studentSearch.js
                         page/search helpers), employeeForm.js (role options, client errors, payloads without
@@ -137,6 +149,10 @@ src/
                         payload with program_id null for JHS), sectionSearch.js (filters → school_year_id required,
                         grade_level_id, program_id, search, page; default school year), sectionDisplay.js (table columns,
                         program code or "—", room or "—", program option labels, delete dialog text)
+                        enrollmentSearch.js (filters → school_year_id required, term_id, section_id, grade_level_id, status, search, page; year
+                        change clears term + section; default term), enrollmentForm.js (enroll/move forms, term rule by stage, errors,
+                        payloads, seats left, section labels, move targets), enrollmentStatus.js (statuses, chips, row actions, closing
+                        confirm texts), enrollmentDisplay.js (table columns, student/section/term text, "Not enrolled" current section)
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
