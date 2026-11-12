@@ -3,19 +3,6 @@ const LRN_PATTERN = new RegExp(`^\\d{${LRN_LENGTH}}$`)
 export const TEXT_MAX_LENGTH = 255
 export const CONTACT_MAX_LENGTH = 20
 
-export const STUDENT_GRADE_LEVELS = Object.freeze([
-  'Grade 7',
-  'Grade 8',
-  'Grade 9',
-  'Grade 10',
-  'Grade 11',
-  'Grade 12',
-  '1st Year College',
-  '2nd Year College',
-  '3rd Year College',
-  '4th Year College',
-])
-
 export const STUDENT_GENDER_OPTIONS = Object.freeze([
   { value: 'male', label: 'Male' },
   { value: 'female', label: 'Female' },
@@ -28,8 +15,6 @@ export const STUDENT_FIELD_LABELS = Object.freeze({
   last_name: 'Last name',
   birth_date: 'Birth date',
   gender: 'Gender',
-  grade_level: 'Level',
-  section: 'Section / course',
   address: 'Address',
   contact: 'Contact',
   guardian_name: 'Guardian name',

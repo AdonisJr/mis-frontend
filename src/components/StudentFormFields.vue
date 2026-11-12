@@ -5,7 +5,6 @@ import {
   OPTIONAL_STUDENT_FIELDS,
   STUDENT_FIELD_LABELS,
   STUDENT_GENDER_OPTIONS,
-  STUDENT_GRADE_LEVELS,
   TEXT_MAX_LENGTH,
 } from '@/utils/studentForm.js'
 
@@ -15,8 +14,6 @@ const MIDDLE_NAME_FIELD = 'middle_name'
 const LAST_NAME_FIELD = 'last_name'
 const BIRTH_DATE_FIELD = 'birth_date'
 const GENDER_FIELD = 'gender'
-const GRADE_LEVEL_FIELD = 'grade_level'
-const SECTION_FIELD = 'section'
 const ADDRESS_FIELD = 'address'
 const CONTACT_FIELD = 'contact'
 const GUARDIAN_NAME_FIELD = 'guardian_name'
@@ -24,11 +21,8 @@ const GUARDIAN_RELATIONSHIP_FIELD = 'guardian_relationship'
 const GUARDIAN_CONTACT_FIELD = 'guardian_contact'
 const FIELD_ID_PREFIX = 'student-'
 const OPTIONAL_SUFFIX = ' (optional)'
-const SECTION_HINT = 'e.g. BSIT'
-const SECTION_HINT_ID = 'student-section-hint'
 const SELECT_PLACEHOLDER = 'Select…'
 const STUDENT_GROUP_TITLE = 'Student'
-const LEVEL_GROUP_TITLE = 'Level'
 const CONTACT_GROUP_TITLE = 'Contact'
 const GUARDIAN_GROUP_TITLE = 'Guardian'
 const INPUT_CLASS =
@@ -61,11 +55,6 @@ function getErrorId(fieldKey) {
 function getDescribedBy(fieldKey) {
   if (!getFieldError(fieldKey)) return undefined
   return getErrorId(fieldKey)
-}
-
-function getSectionDescribedBy() {
-  if (!getFieldError(SECTION_FIELD)) return SECTION_HINT_ID
-  return `${SECTION_HINT_ID} ${getErrorId(SECTION_FIELD)}`
 }
 
 function getFieldLabel(fieldKey) {
@@ -196,54 +185,6 @@ function getFieldLabel(fieldKey) {
           </select>
           <p v-if="getFieldError(GENDER_FIELD)" :id="getErrorId(GENDER_FIELD)" class="mt-1 text-xs text-red-700">
             {{ getFieldError(GENDER_FIELD) }}
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="space-y-3">
-      <h3 class="text-xs font-bold uppercase tracking-wider text-ink-muted">{{ LEVEL_GROUP_TITLE }}</h3>
-      <div class="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label :for="getFieldId(GRADE_LEVEL_FIELD)" class="mb-1 block text-sm font-semibold text-ink">
-            {{ getFieldLabel(GRADE_LEVEL_FIELD) }}
-          </label>
-          <select
-            :id="getFieldId(GRADE_LEVEL_FIELD)"
-            :value="modelValue[GRADE_LEVEL_FIELD]"
-            :class="INPUT_CLASS"
-            :disabled="isDisabled"
-            :aria-invalid="Boolean(getFieldError(GRADE_LEVEL_FIELD))"
-            :aria-describedby="getDescribedBy(GRADE_LEVEL_FIELD)"
-            @change="updateField(GRADE_LEVEL_FIELD, $event.target.value)"
-          >
-            <option value="" disabled>{{ SELECT_PLACEHOLDER }}</option>
-            <option v-for="gradeLevelOption in STUDENT_GRADE_LEVELS" :key="gradeLevelOption" :value="gradeLevelOption">
-              {{ gradeLevelOption }}
-            </option>
-          </select>
-          <p v-if="getFieldError(GRADE_LEVEL_FIELD)" :id="getErrorId(GRADE_LEVEL_FIELD)" class="mt-1 text-xs text-red-700">
-            {{ getFieldError(GRADE_LEVEL_FIELD) }}
-          </p>
-        </div>
-        <div>
-          <label :for="getFieldId(SECTION_FIELD)" class="mb-1 block text-sm font-semibold text-ink">
-            {{ getFieldLabel(SECTION_FIELD) }}
-          </label>
-          <input
-            :id="getFieldId(SECTION_FIELD)"
-            type="text"
-            :maxlength="TEXT_MAX_LENGTH"
-            :value="modelValue[SECTION_FIELD]"
-            :class="INPUT_CLASS"
-            :disabled="isDisabled"
-            :aria-invalid="Boolean(getFieldError(SECTION_FIELD))"
-            :aria-describedby="getSectionDescribedBy()"
-            @input="updateField(SECTION_FIELD, $event.target.value)"
-          />
-          <p :id="SECTION_HINT_ID" class="mt-1 text-xs text-ink-muted">{{ SECTION_HINT }}</p>
-          <p v-if="getFieldError(SECTION_FIELD)" :id="getErrorId(SECTION_FIELD)" class="mt-1 text-xs text-red-700">
-            {{ getFieldError(SECTION_FIELD) }}
           </p>
         </div>
       </div>

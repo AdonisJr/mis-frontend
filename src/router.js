@@ -5,6 +5,7 @@ import {
   ATTENDANCE_TODAY_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
+  ENROLLMENT_ROUTE_NAME,
   LOGIN_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
@@ -40,6 +41,12 @@ const routes = [
         name: STUDENTS_ROUTE_NAME,
         component: () => import('@/views/StudentsView.vue'),
         meta: { roles: ROUTE_ROLES[STUDENTS_ROUTE_NAME], title: 'Students' },
+      },
+      {
+        path: 'enrollment',
+        name: ENROLLMENT_ROUTE_NAME,
+        component: () => import('@/views/EnrollmentView.vue'),
+        meta: { roles: ROUTE_ROLES[ENROLLMENT_ROUTE_NAME], title: 'Enrollment' },
       },
       {
         path: 'employees',

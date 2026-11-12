@@ -1,16 +1,18 @@
+import { toIdText, toRecordId } from '@/utils/sectionForm.js'
+
 export const FIRST_PAGE = 1
 
 const WHITESPACE_RUN_PATTERN = /\s+/g
 const PAGE_PARAM = 'page'
 const SEARCH_PARAM = 'search'
-const GRADE_LEVEL_PARAM = 'grade_level'
+const GRADE_LEVEL_PARAM = 'grade_level_id'
 
 function isValidPage(pageNumber) {
   return Number.isInteger(pageNumber) && pageNumber >= FIRST_PAGE
 }
 
 export function createStudentFilters() {
-  return { search: '', gradeLevel: '', page: FIRST_PAGE }
+  return { search: '', gradeLevelId: '', page: FIRST_PAGE }
 }
 
 export function normalizeSearchText(searchText) {
@@ -22,9 +24,9 @@ export function buildStudentListParams(studentFilters) {
   const listPage = isValidPage(studentFilters?.page) ? studentFilters.page : FIRST_PAGE
   const studentListParams = { [PAGE_PARAM]: listPage }
   const normalizedSearch = normalizeSearchText(studentFilters?.search)
-  const gradeLevel = studentFilters?.gradeLevel
+  const gradeLevelId = toRecordId(studentFilters?.gradeLevelId)
   if (normalizedSearch !== '') studentListParams[SEARCH_PARAM] = normalizedSearch
-  if (typeof gradeLevel === 'string' && gradeLevel !== '') studentListParams[GRADE_LEVEL_PARAM] = gradeLevel
+  if (gradeLevelId !== null) studentListParams[GRADE_LEVEL_PARAM] = gradeLevelId
   return studentListParams
 }
 
@@ -32,9 +34,8 @@ export function applySearchChange(studentFilters, nextSearch) {
   return { ...studentFilters, search: normalizeSearchText(nextSearch), page: FIRST_PAGE }
 }
 
-export function applyGradeLevelChange(studentFilters, nextGradeLevel) {
-  const gradeLevel = typeof nextGradeLevel === 'string' ? nextGradeLevel : ''
-  return { ...studentFilters, gradeLevel, page: FIRST_PAGE }
+export function applyGradeLevelChange(studentFilters, nextGradeLevelId) {
+  return { ...studentFilters, gradeLevelId: toIdText(nextGradeLevelId), page: FIRST_PAGE }
 }
 
 export function applyPageChange(studentFilters, nextPage) {
