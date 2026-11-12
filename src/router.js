@@ -11,6 +11,7 @@ import {
   RFID_CARDS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
+  SECTIONS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
@@ -75,6 +76,12 @@ const routes = [
         name: PROGRAMS_ROUTE_NAME,
         component: () => import('@/views/ProgramsView.vue'),
         meta: { roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME], title: 'Programs' },
+      },
+      {
+        path: 'sections',
+        name: SECTIONS_ROUTE_NAME,
+        component: () => import('@/views/SectionsView.vue'),
+        meta: { roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME], title: 'Sections' },
       },
       {
         path: ':pathMatch(.*)*',
