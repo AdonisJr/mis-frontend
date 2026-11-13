@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Users,
+  Wallet,
 } from '@lucide/vue'
 import {
   ATTENDANCE_RECORDS_ROUTE_NAME,
@@ -16,6 +17,7 @@ import {
   DASHBOARD_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
   ENROLLMENT_ROUTE_NAME,
+  FEE_SCHEDULES_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
@@ -27,6 +29,7 @@ import { ROUTE_ROLES } from '@/routeRoles.js'
 const PEOPLE_GROUP = 'People'
 const ATTENDANCE_GROUP = 'Attendance'
 const SETUP_GROUP = 'Setup'
+const BILLING_GROUP = 'Billing'
 
 export const NAV_ROW_HEADING = 'heading'
 export const NAV_ROW_ITEM = 'item'
@@ -42,6 +45,7 @@ export const NAV_ITEMS = [
   { label: 'School Years', group: SETUP_GROUP, icon: CalendarRange, routeName: SCHOOL_YEARS_ROUTE_NAME, roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME] },
   { label: 'Programs', group: SETUP_GROUP, icon: BookOpen, routeName: PROGRAMS_ROUTE_NAME, roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME] },
   { label: 'Sections', group: SETUP_GROUP, icon: LayoutGrid, routeName: SECTIONS_ROUTE_NAME, roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME] },
+  { label: 'Fee schedules', group: BILLING_GROUP, icon: Wallet, routeName: FEE_SCHEDULES_ROUTE_NAME, roles: ROUTE_ROLES[FEE_SCHEDULES_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {
