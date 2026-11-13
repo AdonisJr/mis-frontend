@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { Plus } from '@lucide/vue'
+import { CalendarArrowRight, CheckCheck, Plus } from '@lucide/vue'
 import DataTable from '@/components/DataTable.vue'
 import TablePagination from '@/components/TablePagination.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
@@ -9,6 +9,8 @@ import EnrollmentFilterBar from '@/components/EnrollmentFilterBar.vue'
 import EnrollmentRowActions from '@/components/EnrollmentRowActions.vue'
 import EnrollmentEnrollModalView from '@/views/EnrollmentEnrollModalView.vue'
 import EnrollmentMoveModalView from '@/views/EnrollmentMoveModalView.vue'
+import EnrollmentRolloverModalView from '@/views/EnrollmentRolloverModalView.vue'
+import EnrollmentCompleteModalView from '@/views/EnrollmentCompleteModalView.vue'
 import {
   completeEnrollment,
   dropEnrollment,
@@ -77,6 +79,8 @@ const CLOSING_SERVICES = Object.freeze({
 
 const PRIMARY_BUTTON_CLASS =
   'inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-sm font-semibold text-white hover:bg-accent/90 focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60'
+const SECONDARY_BUTTON_CLASS =
+  'inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-sm font-semibold text-ink hover:bg-page focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60'
 const CHIP_CLASS = 'whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-bold'
 
 function createEmptyPageMeta() {
@@ -97,6 +101,8 @@ const isOptionsLoading = ref(true)
 const areOptionsLoaded = ref(false)
 const isFilterReady = ref(false)
 const isEnrollOpen = ref(false)
+const isRolloverOpen = ref(false)
+const isCompleteOpen = ref(false)
 const movingEnrollment = ref(null)
 const closingRequest = ref(null)
 const isClosing = ref(false)
@@ -260,6 +266,21 @@ function openEnroll() {
   isEnrollOpen.value = true
 }
 
+function openRollover() {
+  if (!canEnroll.value) return
+  isRolloverOpen.value = true
+}
+
+function openComplete() {
+  if (!canEnroll.value) return
+  isCompleteOpen.value = true
+}
+
+function handleCompleted() {
+  isCompleteOpen.value = false
+  loadEnrollments()
+}
+
 function requestMove(enrollment) {
   movingEnrollment.value = enrollment
 }
@@ -304,10 +325,20 @@ onBeforeUnmount(cancelPendingSearch)
   <section class="rounded-lg border border-line bg-surface">
     <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
       <h2 class="text-sm font-bold text-ink">Enrollments</h2>
-      <button type="button" :class="PRIMARY_BUTTON_CLASS" :disabled="!canEnroll" @click="openEnroll">
-        <Plus :size="16" aria-hidden="true" />
-        Enroll
-      </button>
+      <div class="flex flex-wrap justify-end gap-2">
+        <button type="button" :class="SECONDARY_BUTTON_CLASS" :disabled="!canEnroll" @click="openRollover">
+          <CalendarArrowRight :size="16" aria-hidden="true" />
+          Roll over
+        </button>
+        <button type="button" :class="SECONDARY_BUTTON_CLASS" :disabled="!canEnroll" @click="openComplete">
+          <CheckCheck :size="16" aria-hidden="true" />
+          Complete section
+        </button>
+        <button type="button" :class="PRIMARY_BUTTON_CLASS" :disabled="!canEnroll" @click="openEnroll">
+          <Plus :size="16" aria-hidden="true" />
+          Enroll
+        </button>
+      </div>
     </div>
     <EnrollmentFilterBar
       :search="searchInput"
@@ -388,6 +419,27 @@ onBeforeUnmount(cancelPendingSearch)
     :default-term-id="filters.termId"
     @close="isEnrollOpen = false"
     @enrolled="handleSaved"
+  />
+
+  <EnrollmentRolloverModalView
+    :is-open="isRolloverOpen"
+    :school-year-id="filters.schoolYearId"
+    :sections="filterSections"
+    :terms="terms"
+    :default-section-id="filters.sectionId"
+    :default-term-id="filters.termId"
+    @close="isRolloverOpen = false"
+    @rolled-over="loadEnrollments"
+  />
+
+  <EnrollmentCompleteModalView
+    :is-open="isCompleteOpen"
+    :school-year-id="filters.schoolYearId"
+    :terms="terms"
+    :default-section-id="filters.sectionId"
+    :default-term-id="filters.termId"
+    @close="isCompleteOpen = false"
+    @completed="handleCompleted"
   />
 
   <EnrollmentMoveModalView

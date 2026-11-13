@@ -5,7 +5,11 @@ const MOVE_SEGMENT = '/move'
 const DROP_SEGMENT = '/drop'
 const TRANSFER_SEGMENT = '/transfer'
 const COMPLETE_SEGMENT = '/complete'
+const SECTIONS_PATH = '/sections'
+const ROLLOVER_PREVIEW_SEGMENT = '/rollover-preview'
+const ROLLOVER_SEGMENT = '/rollover'
 const INVALID_ENROLLMENT_ID_MESSAGE = 'A valid enrollment id is required.'
+const INVALID_SECTION_ID_MESSAGE = 'A valid section id is required.'
 
 function buildEnrollmentActionPath(enrollmentId, actionSegment) {
   if (!Number.isInteger(enrollmentId) || enrollmentId <= 0) throw new Error(INVALID_ENROLLMENT_ID_MESSAGE)
@@ -39,5 +43,27 @@ export async function transferEnrollment(enrollmentId) {
 
 export async function completeEnrollment(enrollmentId) {
   const response = await http.put(buildEnrollmentActionPath(enrollmentId, COMPLETE_SEGMENT), null)
+  return response.data
+}
+
+function buildSectionActionPath(sectionId, actionSegment) {
+  if (!Number.isInteger(sectionId) || sectionId <= 0) throw new Error(INVALID_SECTION_ID_MESSAGE)
+  return `${SECTIONS_PATH}/${sectionId}${actionSegment}`
+}
+
+export async function fetchRolloverPreview(sectionId, termId) {
+  const response = await http.get(buildSectionActionPath(sectionId, ROLLOVER_PREVIEW_SEGMENT), {
+    params: { term_id: termId },
+  })
+  return response.data
+}
+
+export async function rollOverSection(sectionId, rolloverPayload) {
+  const response = await http.post(buildSectionActionPath(sectionId, ROLLOVER_SEGMENT), rolloverPayload)
+  return response.data
+}
+
+export async function completeSection(sectionId, completePayload) {
+  const response = await http.put(buildSectionActionPath(sectionId, COMPLETE_SEGMENT), completePayload)
   return response.data
 }
