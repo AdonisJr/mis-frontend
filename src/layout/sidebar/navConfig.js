@@ -1,6 +1,7 @@
 import {
   BookOpen,
   CalendarCheck,
+  CalendarClock,
   CalendarRange,
   ClipboardList,
   ClipboardPen,
@@ -18,6 +19,7 @@ import {
   EMPLOYEES_ROUTE_NAME,
   ENROLLMENT_ROUTE_NAME,
   FEE_SCHEDULES_ROUTE_NAME,
+  PAYMENT_PLANS_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
@@ -46,6 +48,7 @@ export const NAV_ITEMS = [
   { label: 'Programs', group: SETUP_GROUP, icon: BookOpen, routeName: PROGRAMS_ROUTE_NAME, roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME] },
   { label: 'Sections', group: SETUP_GROUP, icon: LayoutGrid, routeName: SECTIONS_ROUTE_NAME, roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME] },
   { label: 'Fee schedules', group: BILLING_GROUP, icon: Wallet, routeName: FEE_SCHEDULES_ROUTE_NAME, roles: ROUTE_ROLES[FEE_SCHEDULES_ROUTE_NAME] },
+  { label: 'Payment plans', group: BILLING_GROUP, icon: CalendarClock, routeName: PAYMENT_PLANS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_PLANS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {

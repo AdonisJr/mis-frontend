@@ -9,6 +9,7 @@ import {
   FEE_SCHEDULES_ROUTE_NAME,
   LOGIN_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
+  PAYMENT_PLANS_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
@@ -96,6 +97,12 @@ const routes = [
         name: FEE_SCHEDULES_ROUTE_NAME,
         component: () => import('@/views/FeeSchedulesView.vue'),
         meta: { roles: ROUTE_ROLES[FEE_SCHEDULES_ROUTE_NAME], title: 'Fee schedules' },
+      },
+      {
+        path: 'payment-plans',
+        name: PAYMENT_PLANS_ROUTE_NAME,
+        component: () => import('@/views/PaymentPlansView.vue'),
+        meta: { roles: ROUTE_ROLES[PAYMENT_PLANS_ROUTE_NAME], title: 'Payment plans' },
       },
       {
         path: ':pathMatch(.*)*',
