@@ -6,6 +6,7 @@ import {
   DASHBOARD_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
   ENROLLMENT_ROUTE_NAME,
+  FEE_SCHEDULES_ROUTE_NAME,
   LOGIN_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
@@ -89,6 +90,12 @@ const routes = [
         name: SECTIONS_ROUTE_NAME,
         component: () => import('@/views/SectionsView.vue'),
         meta: { roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME], title: 'Sections' },
+      },
+      {
+        path: 'fee-schedules',
+        name: FEE_SCHEDULES_ROUTE_NAME,
+        component: () => import('@/views/FeeSchedulesView.vue'),
+        meta: { roles: ROUTE_ROLES[FEE_SCHEDULES_ROUTE_NAME], title: 'Fee schedules' },
       },
       {
         path: ':pathMatch(.*)*',

@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12), and the enrollment page (enroll a student into a section, move, drop/transfer/complete; the Students page shows the current section) (mis-13), and term rollover / complete section on the enrollment page (mis-14); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12), and the enrollment page (enroll a student into a section, move, drop/transfer/complete; the Students page shows the current section) (mis-13), and term rollover / complete section on the enrollment page (mis-14), and the Billing group with the fee schedules page (fee items, schedules, copy from year) (mis-15); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -71,6 +71,12 @@ src/
                         fetchRolloverPreview GET /sections/{id}/rollover-preview?term_id= ({target_term, seats_left, enrollments}),
                         rollOverSection POST /sections/{id}/rollover ({term_id, enrollment_ids} → {copied_count, skipped}),
                         completeSection PUT /sections/{id}/complete ({term_id} for SHS/college, {} for JHS → {completed_count})
+                      feeItemService.js — fetchFeeItems (params page, search, category, status), createFeeItem, updateFeeItem,
+                        deactivateFeeItem, reactivateFeeItem (body-less PUT) on /fee-items (list {fee_items, meta}, item {fee_item});
+                        fetchAllFeeItems (every page of GET /fee-items → {fee_items}; the schedule line picker)
+                      feeScheduleService.js — fetchFeeSchedules (params school_year_id required, grade_level_id, program_id id or "none" =
+                        default only, page), fetchFeeSchedule, createFeeSchedule, updateFeeSchedule, deleteFeeSchedule (204) on /fee-schedules
+                        (list {fee_schedules, meta}, item {fee_schedule} with lines), copyFeeSchedules POST /fee-schedules/copy ({copied_count, skipped})
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
                       authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
@@ -109,6 +115,13 @@ src/
                         Transfer / Complete for an enrolled row only, emits only),
                         EnrollmentRolloverFields.vue (section + source term, next term + seats left, student checkboxes with locked rows),
                         EnrollmentRolloverResult.vue (copied text + skipped list), EnrollmentCompleteFields.vue (section, term for SHS/college, count)
+                        TabList.vue (reusable ARIA tabs: tabs/modelValue/idPrefix, arrow/Home/End keys),
+                        FeeScheduleFilterBar.vue (School year + Grade level + Program "Any program" / "All programs (default)"),
+                        FeeScheduleFormFields.vue (school year/grade level/program, key locked on edit), FeeScheduleLineEditor.vue (fee item + amount
+                        rows, add/remove), FeeScheduleTotals.vue (live subtotals + total), FeeScheduleRowActions.vue (Edit / Delete, emits only),
+                        FeeScheduleCopyFields.vue (source year, copy-into label), FeeScheduleCopyResult.vue (copied text + skipped list),
+                        FeeItemFilterBar.vue (search + Category + Status), FeeItemFormFields.vue (name/category/description),
+                        FeeItemRowActions.vue (Edit / Deactivate or Reactivate, emits only)
   views/              every page flat as <Name>View.vue, no role subfolders (roles per route via
                         src/routeRoles.js); LoginView.vue (/login, public); placeholders DashboardView
                         (/dashboard), RfidCardsView (/rfid-cards), AttendanceTodayView (/attendance/today),
@@ -127,7 +140,11 @@ src/
                         school year (active, else newest) + term (active, else All terms) + grade level + section + status filters, student search,
                         Enroll, Roll over, Complete section, Move, Drop / Transfer / Complete (ConfirmDialog); EnrollmentEnrollModalView + EnrollmentMoveModalView +
                         EnrollmentRolloverModalView + EnrollmentCompleteModalView (embedded in
-                        EnrollmentView, not routed: the four modals, they call the services and toast); NotFoundView (404 + Root)
+                        EnrollmentView, not routed: the four modals, they call the services and toast);
+                        FeeSchedulesView (/fee-schedules, admin, Billing) — Schedules and Fee items tabs; Schedules: school year (active, else newest) +
+                        grade level (JHS/SHS) + program filters, paginated table, add/edit, delete, Copy from year; FeeScheduleFormModalView +
+                        FeeScheduleCopyModalView + FeeItemsPanelView (embedded in FeeSchedulesView, not routed: schedule form with live totals, copy
+                        modal with result summary, the fee items tab with filters, add/edit, deactivate/reactivate); NotFoundView (404 + Root)
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; MainTopBar.vue = menu button,
                         breadcrumb, page title (meta.title), SchoolYearBadge (both roles; loads the active
@@ -161,6 +178,12 @@ src/
                         confirm texts), enrollmentDisplay.js (table columns, student/section/term text, "Not enrolled" current section),
                         enrollmentRollover.js (rollover sections, preview/result normalizing, selection, block reasons, payload, seats text),
                         enrollmentComplete.js (complete form rules, payload, count + confirm + closed texts)
+                        moneyDisplay.js (integer-cents money helpers: toCents, formatCentsAsAmount, formatPeso; reused by MIS-16..20),
+                        feeItemForm.js (categories, form rules, payload without is_active, status dialog texts), feeItemSearch.js (filters → page/search/
+                        category/status params), feeScheduleForm.js (billable grade levels, SHS-only program, line rules: item, duplicate, amount;
+                        line picker options, payload, copy rules), feeScheduleTotals.js (cent subtotals per category + total), feeScheduleSearch.js
+                        (filters → school_year_id required, grade_level_id, program_id incl. "none"; default year), feeScheduleDisplay.js (table
+                        columns, grade level/program text, delete text, copy result)
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
