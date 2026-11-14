@@ -1,4 +1,5 @@
 import {
+  BadgePercent,
   BookOpen,
   CalendarCheck,
   CalendarClock,
@@ -6,6 +7,7 @@ import {
   ClipboardList,
   ClipboardPen,
   GraduationCap,
+  HandCoins,
   IdCard,
   LayoutDashboard,
   LayoutGrid,
@@ -16,6 +18,7 @@ import {
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
+  DISCOUNT_TYPES_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
   ENROLLMENT_ROUTE_NAME,
   FEE_SCHEDULES_ROUTE_NAME,
@@ -25,6 +28,7 @@ import {
   SCHOOL_YEARS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
+  STUDENT_DISCOUNTS_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 
@@ -49,6 +53,8 @@ export const NAV_ITEMS = [
   { label: 'Sections', group: SETUP_GROUP, icon: LayoutGrid, routeName: SECTIONS_ROUTE_NAME, roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME] },
   { label: 'Fee schedules', group: BILLING_GROUP, icon: Wallet, routeName: FEE_SCHEDULES_ROUTE_NAME, roles: ROUTE_ROLES[FEE_SCHEDULES_ROUTE_NAME] },
   { label: 'Payment plans', group: BILLING_GROUP, icon: CalendarClock, routeName: PAYMENT_PLANS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_PLANS_ROUTE_NAME] },
+  { label: 'Discount types', group: BILLING_GROUP, icon: BadgePercent, routeName: DISCOUNT_TYPES_ROUTE_NAME, roles: ROUTE_ROLES[DISCOUNT_TYPES_ROUTE_NAME] },
+  { label: 'Student discounts', group: BILLING_GROUP, icon: HandCoins, routeName: STUDENT_DISCOUNTS_ROUTE_NAME, roles: ROUTE_ROLES[STUDENT_DISCOUNTS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {
