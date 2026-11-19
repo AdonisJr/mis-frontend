@@ -1,5 +1,6 @@
 import {
   BadgePercent,
+  Banknote,
   BookOpen,
   CalendarCheck,
   CalendarClock,
@@ -24,6 +25,7 @@ import {
   EMPLOYEES_ROUTE_NAME,
   ENROLLMENT_ROUTE_NAME,
   FEE_SCHEDULES_ROUTE_NAME,
+  PAYMENTS_ROUTE_NAME,
   PAYMENT_PLANS_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
@@ -58,6 +60,7 @@ export const NAV_ITEMS = [
   { label: 'Discount types', group: BILLING_GROUP, icon: BadgePercent, routeName: DISCOUNT_TYPES_ROUTE_NAME, roles: ROUTE_ROLES[DISCOUNT_TYPES_ROUTE_NAME] },
   { label: 'Student discounts', group: BILLING_GROUP, icon: HandCoins, routeName: STUDENT_DISCOUNTS_ROUTE_NAME, roles: ROUTE_ROLES[STUDENT_DISCOUNTS_ROUTE_NAME] },
   { label: 'Assessments', group: BILLING_GROUP, icon: Receipt, routeName: ASSESSMENTS_ROUTE_NAME, roles: ROUTE_ROLES[ASSESSMENTS_ROUTE_NAME] },
+  { label: 'Payments', group: BILLING_GROUP, icon: Banknote, routeName: PAYMENTS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENTS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {

@@ -13,6 +13,8 @@ import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { fetchAllPaymentPlans } from '@/services/paymentPlanService.js'
 import { fetchSchoolYears } from '@/services/schoolYearService.js'
 import { STATEMENT_OF_ACCOUNT_ROUTE_NAME } from '@/routeNames.js'
+import { ADMIN_REGISTRAR_ROLES } from '@/routeRoles.js'
+import { useAuthStore } from '@/stores/authStore.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
 import {
   ASSESSMENT_COLUMNS,
@@ -80,10 +82,17 @@ let searchDebounceTimer = null
 const toast = useToast()
 const router = useRouter()
 const schoolYearStore = useSchoolYearStore()
+const authStore = useAuthStore()
 
 const hasSchoolYears = computed(() => schoolYears.value.length > 0)
-const canAssess = computed(
-  () => areOptionsLoaded.value && hasSchoolYears.value && filters.value.schoolYearId !== '' && !isPlansLoading.value,
+const canAssess = computed(() => authStore.hasAnyRole(ADMIN_REGISTRAR_ROLES))
+const isAssessReady = computed(
+  () =>
+    canAssess.value &&
+    areOptionsLoaded.value &&
+    hasSchoolYears.value &&
+    filters.value.schoolYearId !== '' &&
+    !isPlansLoading.value,
 )
 const selectedSchoolYearLabel = computed(() => {
   const selectedYear = schoolYears.value.find((schoolYear) => String(schoolYear.id) === filters.value.schoolYearId)
@@ -144,6 +153,10 @@ async function loadPaymentPlans() {
   const schoolYearId = toRecordId(filters.value.schoolYearId)
   const requestId = ++planRequestId
   paymentPlans.value = []
+  if (!canAssess.value) {
+    isPlansLoading.value = false
+    return
+  }
   if (schoolYearId === null) {
     isPlansLoading.value = false
     return
@@ -209,7 +222,7 @@ function changePage(nextPage) {
 }
 
 function openAssess() {
-  if (!canAssess.value) return
+  if (!isAssessReady.value) return
   isAssessOpen.value = true
 }
 
@@ -236,7 +249,7 @@ onBeforeUnmount(cancelPendingSearch)
   <section class="rounded-lg border border-line bg-surface">
     <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
       <h2 class="text-sm font-bold text-ink">Assessments</h2>
-      <button type="button" :class="PRIMARY_BUTTON_CLASS" :disabled="!canAssess" @click="openAssess">
+      <button v-if="canAssess" type="button" :class="PRIMARY_BUTTON_CLASS" :disabled="!isAssessReady" @click="openAssess">
         <Plus :size="16" aria-hidden="true" />
         Assess
       </button>
@@ -308,6 +321,7 @@ onBeforeUnmount(cancelPendingSearch)
   </section>
 
   <AssessmentAssessModalView
+    v-if="canAssess"
     :is-open="isAssessOpen"
     :assessment="null"
     :school-year-id="filters.schoolYearId"

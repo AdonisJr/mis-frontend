@@ -1,16 +1,18 @@
 import { defineStore } from 'pinia'
 import { fetchCurrentUser, loginUser, logoutUser } from '@/services/authService.js'
 import { HTTP_UNAUTHORIZED } from '@/services/http.js'
-import { DASHBOARD_ROUTE_NAME, STUDENTS_ROUTE_NAME } from '@/routeNames.js'
+import { DASHBOARD_ROUTE_NAME, PAYMENTS_ROUTE_NAME, STUDENTS_ROUTE_NAME } from '@/routeNames.js'
 
 export const ADMIN_ROLE = 'admin'
 export const REGISTRAR_ROLE = 'registrar'
-export const STAFF_ROLES = [ADMIN_ROLE, REGISTRAR_ROLE]
+export const CASHIER_ROLE = 'cashier'
+export const STAFF_ROLES = [ADMIN_ROLE, REGISTRAR_ROLE, CASHIER_ROLE]
 
 // order is precedence: admin wins for a user holding both roles
 const LANDING_ROUTES = [
   { role: ADMIN_ROLE, routeName: DASHBOARD_ROUTE_NAME },
   { role: REGISTRAR_ROLE, routeName: STUDENTS_ROUTE_NAME },
+  { role: CASHIER_ROLE, routeName: PAYMENTS_ROUTE_NAME },
 ]
 
 const TOKEN_STORAGE_KEY = 'mis_auth_token'

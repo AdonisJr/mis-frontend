@@ -2,14 +2,16 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { Printer, RefreshCw } from '@lucide/vue'
+import { BookOpenText, Printer, RefreshCw } from '@lucide/vue'
 import AssessmentHistoryList from '@/components/AssessmentHistoryList.vue'
 import AssessmentSummary from '@/components/AssessmentSummary.vue'
 import AssessmentAssessModalView from '@/views/AssessmentAssessModalView.vue'
 import { fetchAssessment, fetchAssessmentHistory } from '@/services/assessmentService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { fetchAllPaymentPlans } from '@/services/paymentPlanService.js'
-import { ASSESSMENTS_ROUTE_NAME, STATEMENT_OF_ACCOUNT_ROUTE_NAME } from '@/routeNames.js'
+import { ASSESSMENTS_ROUTE_NAME, STATEMENT_OF_ACCOUNT_ROUTE_NAME, STUDENT_LEDGER_ROUTE_NAME } from '@/routeNames.js'
+import { ADMIN_REGISTRAR_ROLES } from '@/routeRoles.js'
+import { useAuthStore } from '@/stores/authStore.js'
 import {
   buildStatementSchoolName,
   formatAssessmentGradeLevel,
@@ -20,6 +22,7 @@ import {
   getAssessmentStatusChip,
 } from '@/utils/assessmentDisplay.js'
 import { formatEnrollmentStudentName } from '@/utils/enrollmentDisplay.js'
+import { buildStatementPaymentRows } from '@/utils/paymentDisplay.js'
 import { NO_VALUE_LABEL } from '@/utils/sectionDisplay.js'
 import { toRecordId } from '@/utils/sectionForm.js'
 
@@ -31,6 +34,7 @@ const LOADING_TEXT = 'Loading…'
 const BACK_LABEL = 'Back to assessments'
 const STATEMENT_TITLE = 'Statement of account'
 const HISTORY_TITLE = 'Assessment history'
+const REASSESS_BLOCKED_TEXT = 'Re-assess is blocked while this assessment has payments. Void them first.'
 
 const LOAD_FAILED_MESSAGE = 'Could not load the assessment.'
 const HISTORY_FAILED_MESSAGE = 'Could not load the assessment history.'
@@ -45,6 +49,7 @@ const PRIMARY_BUTTON_CLASS =
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
+const authStore = useAuthStore()
 
 const assessment = ref(null)
 const history = ref([])
@@ -57,6 +62,9 @@ let statementRequestId = 0
 
 const assessmentId = computed(() => toRecordId(route.params.assessmentId))
 const isCurrent = computed(() => assessment.value?.status === CURRENT_STATUS)
+const canAssess = computed(() => authStore.hasAnyRole(ADMIN_REGISTRAR_ROLES))
+const hasPayments = computed(() => assessment.value?.has_payments === true)
+const paymentRows = computed(() => buildStatementPaymentRows(assessment.value))
 const statusChip = computed(() => getAssessmentStatusChip(assessment.value?.status))
 const schoolName = buildStatementSchoolName(import.meta.env.VITE_SCHOOL_NAME)
 const statementDateText = formatStatementDate(new Date())
@@ -133,7 +141,8 @@ async function loadStatement() {
   } finally {
     if (requestId === statementRequestId) isStatementLoading.value = false
   }
-  await Promise.all([loadHistory(requestId), loadPaymentPlans(requestId)])
+  const loadTasks = canAssess.value ? [loadHistory(requestId), loadPaymentPlans(requestId)] : [loadHistory(requestId)]
+  await Promise.all(loadTasks)
 }
 
 function printStatement() {
@@ -145,7 +154,7 @@ function openStatementOf(nextAssessmentId) {
 }
 
 function openReassess() {
-  if (!isPlansLoaded.value) return
+  if (!isPlansLoaded.value || hasPayments.value) return
   isReassessOpen.value = true
 }
 
@@ -187,12 +196,32 @@ watch(assessmentId, loadStatement, { immediate: true })
           <Printer :size="16" aria-hidden="true" />
           Print
         </button>
-        <button v-if="isCurrent" type="button" :class="PRIMARY_BUTTON_CLASS" :disabled="!isPlansLoaded" @click="openReassess">
+        <RouterLink
+          :to="{
+            name: STUDENT_LEDGER_ROUTE_NAME,
+            params: { schoolYearId: assessment.school_year_id, studentId: assessment.student_id },
+          }"
+          :class="SECONDARY_BUTTON_CLASS"
+        >
+          <BookOpenText :size="16" aria-hidden="true" />
+          Ledger
+        </RouterLink>
+        <button
+          v-if="isCurrent && canAssess"
+          type="button"
+          :class="PRIMARY_BUTTON_CLASS"
+          :disabled="!isPlansLoaded || hasPayments"
+          @click="openReassess"
+        >
           <RefreshCw :size="16" aria-hidden="true" />
           Re-assess
         </button>
       </div>
     </div>
+
+    <p v-if="isCurrent && canAssess && hasPayments" class="text-xs text-ink-muted print:hidden">
+      {{ REASSESS_BLOCKED_TEXT }}
+    </p>
 
     <p v-if="!isCurrent" class="rounded-md border border-line bg-surface px-4 py-3 text-sm text-ink print:hidden">
       {{ formatSupersededText(assessment) }} {{ READ_ONLY_TEXT }}
@@ -221,6 +250,17 @@ watch(assessmentId, loadStatement, { immediate: true })
         </div>
       </dl>
       <AssessmentSummary :assessment="assessment" is-statement />
+      <dl class="mt-4 space-y-1 text-sm">
+        <div
+          v-for="paymentRow in paymentRows"
+          :key="paymentRow.key"
+          class="flex justify-end gap-6"
+          :class="paymentRow.isEmphasized ? 'font-bold text-ink' : 'text-ink'"
+        >
+          <dt>{{ paymentRow.label }}</dt>
+          <dd class="w-32 text-right tabular-nums">{{ paymentRow.amountText }}</dd>
+        </div>
+      </dl>
     </section>
 
     <section class="rounded-lg border border-line bg-surface print:hidden">
@@ -231,6 +271,7 @@ watch(assessmentId, loadStatement, { immediate: true })
     </section>
 
     <AssessmentAssessModalView
+      v-if="canAssess"
       :is-open="isReassessOpen"
       :assessment="assessment"
       :school-year-id="String(assessment.school_year_id)"

@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12), and the enrollment page (enroll a student into a section, move, drop/transfer/complete; the Students page shows the current section) (mis-13), and term rollover / complete section on the enrollment page (mis-14), and the Billing group with the fee schedules page (fee items, schedules, copy from year) (mis-15), and the payment plans page (installment due dates, down payment, tuition adjustment, copy from year) (mis-16), and the discount types and student discounts pages (global catalog; per-year assignments checked against stage, once per type, one government type) (mis-17), and the assessments page and printable statement of account (preview, save, re-assess with history; discount changes re-assess on confirm) (mis-18); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar/cashier) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12), and the enrollment page (enroll a student into a section, move, drop/transfer/complete; the Students page shows the current section) (mis-13), and term rollover / complete section on the enrollment page (mis-14), and the Billing group with the fee schedules page (fee items, schedules, copy from year) (mis-15), and the payment plans page (installment due dates, down payment, tuition adjustment, copy from year) (mis-16), and the discount types and student discounts pages (global catalog; per-year assignments checked against stage, once per type, one government type) (mis-17), and the assessments page and printable statement of account (preview, save, re-assess with history; discount changes re-assess on confirm) (mis-18), and the cashier role with the payments page, student ledger (record payment, void with reason) and printable acknowledgment receipt (mis-19); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -30,7 +30,8 @@ src/
   routeNames.js       single source of route-name constants (*_ROUTE_NAME), imported by router, store, views
                         and layout; no route-name literals elsewhere (http.js keeps its 'Login')
   routeRoles.js       single source of page roles: ROUTE_ROLES keyed by the *_ROUTE_NAME constants (every
-                        guarded route incl. Root and NotFound); ADMIN_ONLY_ROLES declared only here; read by
+                        guarded route incl. Root and NotFound); ADMIN_ONLY_ROLES declared only here; exports ADMIN_REGISTRAR_ROLES (Students, Enrollment, Assess/Re-assess gate) and
+                        PAYMENT_RECORDER_ROLES (admin + cashier: Record payment); read by
                         router.js meta.roles and layout/sidebar/navConfig.js
   router.js           all routes + beforeEach guard: restoreSession() once per app load; each MainPanelLayout
                         child declares its own meta.roles (from ROUTE_ROLES) + meta.title (no parent meta); logged out → /login;
@@ -91,10 +92,13 @@ src/
                       assessmentService.js — fetchAssessments (params school_year_id required, search, grade_level_id, payment_plan_id, page; {assessments, meta}, current only),
                         fetchAssessmentCandidates ({students, meta}), previewAssessment (POST /assessments/preview), createAssessment, fetchAssessment, fetchAssessmentHistory
                         ({assessments}, no meta), reassessAssessment (POST /assessments/{id}/reassess, body payment_plan_id); item {assessment}
+                      paymentService.js — fetchPayments (GET /payments: date_from, date_to, method, recorded_by, status, search, page; {payments, meta, collection_total}),
+                        fetchPaymentRecorders ({recorders}), recordPayment (POST, {payment}), voidPayment(id, {void_reason}) (PUT /payments/{id}/void), fetchPaymentReceipt(id)
+                        ({receipt}), fetchStudentLedger({student_id, school_year_id}) ({ledger}, 404/422 no current assessment); rows carry the server can_void flag;
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
-                      authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, STAFF_ROLES; getter
-                        landingRouteName (admin → Dashboard, registrar → Students, admin first, else null);
+                      authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, CASHIER_ROLE, STAFF_ROLES; getter
+                        landingRouteName (admin → Dashboard, registrar → Students, cashier → Payments, in that precedence, else null);
                         the only code that touches localStorage (keys mis_auth_token, mis_auth_user)
                       schoolYearStore.js → useSchoolYearStore: activeSchoolYear + activeTerm for the top-bar badge,
                         loaded by MainTopBar on shell mount (term only when a school year is active), replaced after
@@ -146,7 +150,10 @@ src/
                         over merged enrollments, stage-filtered type select, reference no., remarks; edit shows student and type read-only),
                         StudentDiscountRowActions.vue (Edit / Remove, emits only), AssessmentFilterBar.vue (School year + search + Grade level + Plan),
                         AssessmentFormFields.vue (candidate picker or read-only student, active-plan select), AssessmentSummary.vue (shared fees/discounts/totals/schedule
-                        tables for preview and statement), AssessmentHistoryList.vue (read-only history rows, emits open)
+                        tables for preview and statement), AssessmentHistoryList.vue (read-only history rows, emits open),
+                        PaymentFilterBar.vue (dates, method, cashier, status, search), PaymentFormFields.vue (amount, date, method, reference, remarks),
+                        PaymentLedgerSummary.vue (net/paid/balance tiles + schedule with status and overdue chips), PaymentHistoryList.vue (ledger payment rows),
+                        PaymentRowActions.vue (Receipt / Void from can_void, emits only), PaymentReceiptSheet.vue (printable acknowledgment receipt, VOID watermark)
   views/              every page flat as <Name>View.vue, no role subfolders (roles per route via
                         src/routeRoles.js); LoginView.vue (/login, public); placeholders DashboardView
                         (/dashboard), RfidCardsView (/rfid-cards), AttendanceTodayView (/attendance/today),
@@ -183,6 +190,11 @@ src/
                         table, Assess; StatementOfAccountView (/assessments/:assessmentId, admin + registrar, meta.isPrintable) — printable statement, Print, Re-assess
                         (current only), history; AssessmentAssessModalView (embedded, not routed: candidate picker, plan, live preview, Save / Re-assess with ConfirmDialog);
                         Student discounts assign/remove show a re-assess confirm step when the student has a current assessment (mis-18);
+                        PaymentsView (/payments, all staff, Billing; cashier landing) — date-range/method/cashier/status filters, search, collection total, paginated table,
+                        embedded PaymentStudentSearchView (student search → ledger), PaymentVoidModalView (reason); StudentLedgerView (/payments/ledger/:schoolYearId/:studentId,
+                        all staff) — summary, schedule, history, Record payment (admin + cashier) via PaymentRecordModalView (embedded, success panel); PaymentReceiptView
+                        (/payments/:paymentId/receipt, meta.isPrintable); Assessments are read-only for the cashier (no Assess, no /payment-plans call); the statement shows
+                        total paid and balance, a Ledger link, and disables Re-assess with a note while payments exist;
                         NotFoundView (404 + Root)
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; hides sidebar, top bar and padding when printing a route with meta.isPrintable; MainTopBar.vue = menu button,
@@ -229,7 +241,10 @@ src/
                         type, one government type; enrollment candidate merge; payloads), discountDisplay.js (columns, value/base/stages cells, source
                         chip, confirm texts), discountSearch.js (type and student discount list params, enrollment candidate params), assessmentSearch.js (list and candidate params,
                         filter changes), assessmentForm.js (assess/re-assess form rules, preview key, re-assess confirm detection and payloads), assessmentDisplay.js
-                        (columns, signed pesos, category/totals/discount/schedule rows, status chip, statement and confirm texts)
+                        (columns, signed pesos, category/totals/discount/schedule rows, status chip, statement and confirm texts),
+                        amountInWords.js (peso amount in words for the receipt), paymentForm.js (methods, record-payment rules, payload, void reason rule),
+                        paymentDisplay.js (columns, chips, can_void read, ledger/statement rows, receipt void text), paymentSearch.js (payment list params, date range,
+                        ledger student search params); employeeForm.js role options include cashier
 ```
 
 Realtime contract (with mis-backend): Echo `broadcaster: 'pusher'`, config only from `VITE_PUSHER_*`; public channel `rfid`, event `AssignRfid`, UID in `e.message`. Assignment flow: `POST /rfid/open` → listen → `PUT /students/rfid/{id}` `{rfid}` → `POST /rfid/close` when the modal closes; leave the channel on unmount.
