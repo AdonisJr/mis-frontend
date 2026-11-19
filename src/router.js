@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore.js'
 import {
+  ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
@@ -16,6 +17,7 @@ import {
   ROOT_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
+  STATEMENT_OF_ACCOUNT_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
   STUDENT_DISCOUNTS_ROUTE_NAME,
 } from '@/routeNames.js'
@@ -117,6 +119,18 @@ const routes = [
         name: STUDENT_DISCOUNTS_ROUTE_NAME,
         component: () => import('@/views/StudentDiscountsView.vue'),
         meta: { roles: ROUTE_ROLES[STUDENT_DISCOUNTS_ROUTE_NAME], title: 'Student discounts' },
+      },
+      {
+        path: 'assessments',
+        name: ASSESSMENTS_ROUTE_NAME,
+        component: () => import('@/views/AssessmentsView.vue'),
+        meta: { roles: ROUTE_ROLES[ASSESSMENTS_ROUTE_NAME], title: 'Assessments' },
+      },
+      {
+        path: 'assessments/:assessmentId(\\d+)',
+        name: STATEMENT_OF_ACCOUNT_ROUTE_NAME,
+        component: () => import('@/views/StatementOfAccountView.vue'),
+        meta: { roles: ROUTE_ROLES[STATEMENT_OF_ACCOUNT_ROUTE_NAME], title: 'Statement of account', isPrintable: true },
       },
       {
         path: ':pathMatch(.*)*',

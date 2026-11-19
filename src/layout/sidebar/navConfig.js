@@ -11,10 +11,12 @@ import {
   IdCard,
   LayoutDashboard,
   LayoutGrid,
+  Receipt,
   Users,
   Wallet,
 } from '@lucide/vue'
 import {
+  ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
@@ -55,6 +57,7 @@ export const NAV_ITEMS = [
   { label: 'Payment plans', group: BILLING_GROUP, icon: CalendarClock, routeName: PAYMENT_PLANS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_PLANS_ROUTE_NAME] },
   { label: 'Discount types', group: BILLING_GROUP, icon: BadgePercent, routeName: DISCOUNT_TYPES_ROUTE_NAME, roles: ROUTE_ROLES[DISCOUNT_TYPES_ROUTE_NAME] },
   { label: 'Student discounts', group: BILLING_GROUP, icon: HandCoins, routeName: STUDENT_DISCOUNTS_ROUTE_NAME, roles: ROUTE_ROLES[STUDENT_DISCOUNTS_ROUTE_NAME] },
+  { label: 'Assessments', group: BILLING_GROUP, icon: Receipt, routeName: ASSESSMENTS_ROUTE_NAME, roles: ROUTE_ROLES[ASSESSMENTS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {

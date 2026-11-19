@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
+import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
 import Modal from '@/components/modal/Modal.vue'
 import StudentDiscountFormFields from '@/components/StudentDiscountFormFields.vue'
 import { fetchEnrollments } from '@/services/enrollmentService.js'
@@ -10,6 +11,11 @@ import {
   fetchAllStudentDiscounts,
   updateStudentDiscount,
 } from '@/services/studentDiscountService.js'
+import { buildReassessDiscountMessage } from '@/utils/assessmentDisplay.js'
+import {
+  buildReassessAssignPayload,
+  isReassessConfirmNeeded,
+} from '@/utils/assessmentForm.js'
 import { buildDiscountTypeOptionLabel } from '@/utils/discountDisplay.js'
 import { buildEnrollmentCandidateParams } from '@/utils/discountSearch.js'
 import {
@@ -42,6 +48,10 @@ const HELD_FAILED_MESSAGE = "Could not load the student's discounts."
 const SAVE_FAILED_MESSAGE = 'Could not save the student discount.'
 const ASSIGN_SUCCESS_MESSAGE = 'Discount assigned.'
 const UPDATE_SUCCESS_MESSAGE = 'Student discount updated.'
+const REASSESS_SUCCESS_MESSAGE = 'Discount assigned and assessment updated.'
+const REASSESS_CONFIRM_TITLE = 'Re-assess student'
+const REASSESS_CONFIRM_LABEL = 'Assign and re-assess'
+const REASSESS_ASSIGN_KIND = 'assign'
 
 const SECONDARY_BUTTON_CLASS =
   'inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-sm font-semibold hover:bg-page focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60'
@@ -61,6 +71,9 @@ const emit = defineEmits(['close', 'saved'])
 const formValues = ref(createEmptyAssignForm(''))
 const fieldErrors = ref({})
 const isSaving = ref(false)
+const isReassessConfirmOpen = ref(false)
+const isReassessSaving = ref(false)
+const reassessMessage = ref('')
 const studentSearchText = ref('')
 const candidates = ref([])
 const hasMore = ref(false)
@@ -173,6 +186,8 @@ function resetModal() {
   else resetCreate()
   fieldErrors.value = {}
   isSaving.value = false
+  isReassessConfirmOpen.value = false
+  isReassessSaving.value = false
   studentSearchText.value = ''
   candidates.value = []
   hasMore.value = false
@@ -220,10 +235,36 @@ async function saveStudentDiscount() {
     toast.success(wasEditing ? UPDATE_SUCCESS_MESSAGE : ASSIGN_SUCCESS_MESSAGE)
     emit('saved')
   } catch (error) {
-    applySaveError(error)
+    if (!wasEditing && isReassessConfirmNeeded(error.response)) openReassessConfirm(error.response.data.message)
+    else applySaveError(error)
   } finally {
     isSaving.value = false
   }
+}
+
+function openReassessConfirm(serverMessage) {
+  reassessMessage.value = buildReassessDiscountMessage(serverMessage, REASSESS_ASSIGN_KIND)
+  isReassessConfirmOpen.value = true
+}
+
+async function confirmReassessAssign() {
+  if (isReassessSaving.value) return
+  isReassessSaving.value = true
+  try {
+    await createStudentDiscount(buildReassessAssignPayload(buildAssignPayload(formValues.value)))
+    toast.success(REASSESS_SUCCESS_MESSAGE)
+    emit('saved')
+  } catch (error) {
+    applySaveError(error)
+  } finally {
+    isReassessSaving.value = false
+    isReassessConfirmOpen.value = false
+  }
+}
+
+function cancelReassessAssign() {
+  if (isReassessSaving.value) return
+  isReassessConfirmOpen.value = false
 }
 
 watch(
@@ -237,7 +278,7 @@ onBeforeUnmount(cancelPendingWork)
 </script>
 
 <template>
-  <Modal :is-open="isOpen" :title="formTitle" @close="closeModal">
+  <Modal :is-open="isOpen && !isReassessConfirmOpen" :title="formTitle" @close="closeModal">
     <form :id="FORM_ID" novalidate @submit.prevent="saveStudentDiscount">
       <StudentDiscountFormFields
         v-model="formValues"
@@ -266,4 +307,14 @@ onBeforeUnmount(cancelPendingWork)
       </button>
     </template>
   </Modal>
+
+  <ConfirmDialog
+    :is-open="isOpen && isReassessConfirmOpen"
+    :title="REASSESS_CONFIRM_TITLE"
+    :message="reassessMessage"
+    :confirm-label="REASSESS_CONFIRM_LABEL"
+    :is-loading="isReassessSaving"
+    @confirm="confirmReassessAssign"
+    @cancel="cancelReassessAssign"
+  />
 </template>

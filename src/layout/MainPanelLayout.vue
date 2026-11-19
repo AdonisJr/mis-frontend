@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import MainTopBar from '@/layout/MainTopBar.vue'
 import MainSidebar from '@/layout/sidebar/MainSidebar.vue'
@@ -10,6 +10,7 @@ const sidebar = ref(null)
 const topBar = ref(null)
 
 const route = useRoute()
+const isPrintableRoute = computed(() => route.meta.isPrintable === true)
 
 function toggleSidebarCollapse() {
   isSidebarCollapsed.value = !isSidebarCollapsed.value
@@ -44,16 +45,20 @@ onBeforeUnmount(() => document.removeEventListener('keydown', closeDrawerOnEscap
 
 <template>
   <div class="flex min-h-screen bg-page text-ink">
-    <MainSidebar
-      ref="sidebar"
-      :is-collapsed="isSidebarCollapsed"
-      :is-drawer-open="isDrawerOpen"
-      @toggle-collapse="toggleSidebarCollapse"
-      @close-drawer="closeDrawer"
-    />
+    <div class="contents" :class="{ 'print:hidden': isPrintableRoute }">
+      <MainSidebar
+        ref="sidebar"
+        :is-collapsed="isSidebarCollapsed"
+        :is-drawer-open="isDrawerOpen"
+        @toggle-collapse="toggleSidebarCollapse"
+        @close-drawer="closeDrawer"
+      />
+    </div>
     <div class="flex min-w-0 flex-1 flex-col">
-      <MainTopBar ref="topBar" @open-drawer="openDrawer" />
-      <main class="flex flex-1 flex-col gap-4 p-3.5 md:p-6"><router-view /></main>
+      <MainTopBar ref="topBar" :class="{ 'print:hidden': isPrintableRoute }" @open-drawer="openDrawer" />
+      <main class="flex flex-1 flex-col gap-4 p-3.5 md:p-6" :class="{ 'print:p-0': isPrintableRoute }">
+        <router-view />
+      </main>
     </div>
   </div>
 </template>

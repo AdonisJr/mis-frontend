@@ -11,3 +11,9 @@
   --font-sans: "Manrope Variable", "Manrope", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;  /* RFID UIDs, codes */
 }
+
+@utility print-page-statement {
+  page: statement;
+}
+
+@page statement { size: portrait; margin: 12mm; }
