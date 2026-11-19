@@ -4,6 +4,7 @@ import {
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
+  DISCOUNT_TYPES_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
   ENROLLMENT_ROUTE_NAME,
   FEE_SCHEDULES_ROUTE_NAME,
@@ -16,6 +17,7 @@ import {
   SCHOOL_YEARS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
+  STUDENT_DISCOUNTS_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 
@@ -103,6 +105,18 @@ const routes = [
         name: PAYMENT_PLANS_ROUTE_NAME,
         component: () => import('@/views/PaymentPlansView.vue'),
         meta: { roles: ROUTE_ROLES[PAYMENT_PLANS_ROUTE_NAME], title: 'Payment plans' },
+      },
+      {
+        path: 'discount-types',
+        name: DISCOUNT_TYPES_ROUTE_NAME,
+        component: () => import('@/views/DiscountTypesView.vue'),
+        meta: { roles: ROUTE_ROLES[DISCOUNT_TYPES_ROUTE_NAME], title: 'Discount types' },
+      },
+      {
+        path: 'student-discounts',
+        name: STUDENT_DISCOUNTS_ROUTE_NAME,
+        component: () => import('@/views/StudentDiscountsView.vue'),
+        meta: { roles: ROUTE_ROLES[STUDENT_DISCOUNTS_ROUTE_NAME], title: 'Student discounts' },
       },
       {
         path: ':pathMatch(.*)*',
