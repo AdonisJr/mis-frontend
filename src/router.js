@@ -11,7 +11,9 @@ import {
   FEE_SCHEDULES_ROUTE_NAME,
   LOGIN_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
+  PAYMENTS_ROUTE_NAME,
   PAYMENT_PLANS_ROUTE_NAME,
+  PAYMENT_RECEIPT_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
@@ -20,6 +22,7 @@ import {
   STATEMENT_OF_ACCOUNT_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
   STUDENT_DISCOUNTS_ROUTE_NAME,
+  STUDENT_LEDGER_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 
@@ -131,6 +134,24 @@ const routes = [
         name: STATEMENT_OF_ACCOUNT_ROUTE_NAME,
         component: () => import('@/views/StatementOfAccountView.vue'),
         meta: { roles: ROUTE_ROLES[STATEMENT_OF_ACCOUNT_ROUTE_NAME], title: 'Statement of account', isPrintable: true },
+      },
+      {
+        path: 'payments',
+        name: PAYMENTS_ROUTE_NAME,
+        component: () => import('@/views/PaymentsView.vue'),
+        meta: { roles: ROUTE_ROLES[PAYMENTS_ROUTE_NAME], title: 'Payments' },
+      },
+      {
+        path: 'payments/ledger/:schoolYearId(\\d+)/:studentId(\\d+)',
+        name: STUDENT_LEDGER_ROUTE_NAME,
+        component: () => import('@/views/StudentLedgerView.vue'),
+        meta: { roles: ROUTE_ROLES[STUDENT_LEDGER_ROUTE_NAME], title: 'Student ledger' },
+      },
+      {
+        path: 'payments/:paymentId(\\d+)/receipt',
+        name: PAYMENT_RECEIPT_ROUTE_NAME,
+        component: () => import('@/views/PaymentReceiptView.vue'),
+        meta: { roles: ROUTE_ROLES[PAYMENT_RECEIPT_ROUTE_NAME], title: 'Acknowledgment receipt', isPrintable: true },
       },
       {
         path: ':pathMatch(.*)*',

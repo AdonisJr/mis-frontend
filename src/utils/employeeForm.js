@@ -3,6 +3,7 @@ export const PASSWORD_MIN_LENGTH = 8
 export const EMPLOYEE_ROLE_OPTIONS = Object.freeze([
   { value: 'admin', label: 'Admin' },
   { value: 'registrar', label: 'Registrar' },
+  { value: 'cashier', label: 'Cashier' },
 ])
 
 export const EMPLOYEE_FIELD_LABELS = Object.freeze({

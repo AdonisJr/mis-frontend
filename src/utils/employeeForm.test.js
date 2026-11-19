@@ -33,10 +33,11 @@ const COMPLETE_ADD_FORM = {
 }
 
 describe('EMPLOYEE_ROLE_OPTIONS', () => {
-  it('offers admin and registrar with Admin and Registrar labels', () => {
+  it('offers admin, registrar and cashier with their labels', () => {
     expect(EMPLOYEE_ROLE_OPTIONS).toEqual([
       { value: 'admin', label: 'Admin' },
       { value: 'registrar', label: 'Registrar' },
+      { value: 'cashier', label: 'Cashier' },
     ])
   })
 })
@@ -177,6 +178,11 @@ describe('buildEmployeePayload', () => {
   it('keeps only admin and registrar in option order', () => {
     const editForm = { ...COMPLETE_ADD_FORM, roles: ['registrar', 'teacher', 'admin'] }
     expect(buildEmployeePayload(editForm, false).roles).toEqual(['admin', 'registrar'])
+  })
+
+  it('keeps cashier in option order', () => {
+    const editForm = { ...COMPLETE_ADD_FORM, roles: ['cashier', 'admin'] }
+    expect(buildEmployeePayload(editForm, false).roles).toEqual(['admin', 'cashier'])
   })
 })
 
