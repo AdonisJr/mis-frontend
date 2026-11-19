@@ -5,6 +5,8 @@ const COPY_PATH = '/payment-plans/copy'
 const DEACTIVATE_SEGMENT = '/deactivate'
 const REACTIVATE_SEGMENT = '/reactivate'
 const INVALID_PAYMENT_PLAN_ID_MESSAGE = 'A valid payment plan id is required.'
+const FIRST_PAYMENT_PLAN_PAGE = 1
+const SECOND_PAYMENT_PLAN_PAGE = 2
 
 function assertPaymentPlanId(paymentPlanId) {
   if (Number.isInteger(paymentPlanId) && paymentPlanId > 0) return
@@ -19,6 +21,22 @@ function buildPaymentPlanPath(paymentPlanId) {
 export async function fetchPaymentPlans(paymentPlanListParams) {
   const response = await http.get(PAYMENT_PLANS_PATH, { params: paymentPlanListParams })
   return response.data
+}
+
+export async function fetchAllPaymentPlans(paymentPlanListParams) {
+  const firstPageResponse = await fetchPaymentPlans({ ...paymentPlanListParams, page: FIRST_PAYMENT_PLAN_PAGE })
+  const lastPage = firstPageResponse?.meta?.last_page
+  const laterPageNumbers = Number.isInteger(lastPage)
+    ? Array.from(
+        { length: Math.max(lastPage - FIRST_PAYMENT_PLAN_PAGE, 0) },
+        (_unused, index) => index + SECOND_PAYMENT_PLAN_PAGE,
+      )
+    : []
+  const laterPageResponses = await Promise.all(
+    laterPageNumbers.map((pageNumber) => fetchPaymentPlans({ ...paymentPlanListParams, page: pageNumber })),
+  )
+  const pageResponses = [firstPageResponse, ...laterPageResponses]
+  return { payment_plans: pageResponses.flatMap((planPage) => planPage?.payment_plans ?? []) }
 }
 
 export async function fetchPaymentPlan(paymentPlanId) {

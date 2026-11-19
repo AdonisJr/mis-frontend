@@ -46,7 +46,7 @@ export async function updateStudentDiscount(studentDiscountId, notePayload) {
   return response.data
 }
 
-export async function deleteStudentDiscount(studentDiscountId) {
-  const response = await http.delete(buildStudentDiscountPath(studentDiscountId))
+export async function deleteStudentDiscount(studentDiscountId, deleteParams) {
+  const response = await http.delete(buildStudentDiscountPath(studentDiscountId), { params: deleteParams })
   return response.data
 }

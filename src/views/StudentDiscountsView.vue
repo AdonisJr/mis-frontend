@@ -13,6 +13,8 @@ import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { fetchSchoolYears } from '@/services/schoolYearService.js'
 import { deleteStudentDiscount, fetchStudentDiscounts } from '@/services/studentDiscountService.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
+import { buildReassessDiscountMessage } from '@/utils/assessmentDisplay.js'
+import { REASSESS_DELETE_PARAMS, isReassessConfirmNeeded } from '@/utils/assessmentForm.js'
 import {
   STUDENT_DISCOUNT_COLUMNS,
   buildStudentDiscountRemoveMessage,
@@ -46,6 +48,9 @@ const NO_SCHOOL_YEAR_TEXT = 'Add a school year first: student discounts belong t
 const OPTIONS_FAILED_TEXT = 'The school years or discount types could not be loaded. Reload the page to try again.'
 const REMOVE_TITLE = 'Remove student discount'
 const REMOVE_CONFIRM_LABEL = 'Remove'
+const REASSESS_REMOVE_TITLE = 'Remove and re-assess'
+const REASSESS_REMOVE_LABEL = 'Remove and re-assess'
+const REASSESS_REMOVE_KIND = 'remove'
 const SEARCH_DEBOUNCE_MS = 300
 const CHIP_CLASS = 'rounded-full px-2.5 py-0.5 text-xs font-bold'
 const MUTED_CELL_CLASS = 'text-ink-muted'
@@ -53,6 +58,7 @@ const MUTED_CELL_CLASS = 'text-ink-muted'
 const LOAD_FAILED_MESSAGE = 'Could not load student discounts.'
 const OPTIONS_FAILED_MESSAGE = 'Could not load the page options.'
 const REMOVE_SUCCESS_MESSAGE = 'Student discount removed.'
+const REASSESS_REMOVE_SUCCESS_MESSAGE = 'Student discount removed and assessment updated.'
 const REMOVE_FAILED_MESSAGE = 'Could not remove the student discount.'
 
 const PRIMARY_BUTTON_CLASS =
@@ -76,6 +82,7 @@ const isFormOpen = ref(false)
 const editingDiscount = ref(null)
 const removingDiscount = ref(null)
 const isRemoving = ref(false)
+const removeReassessMessage = ref('')
 let listRequestId = 0
 let searchDebounceTimer = null
 
@@ -89,7 +96,12 @@ const selectedSchoolYearLabel = computed(() => {
   return selectedYear?.name ?? NO_VALUE_LABEL
 })
 const isRemoveConfirmOpen = computed(() => removingDiscount.value !== null)
-const removeMessage = computed(() => buildStudentDiscountRemoveMessage(removingDiscount.value))
+const isAwaitingReassess = computed(() => removeReassessMessage.value !== '')
+const removeTitle = computed(() => (isAwaitingReassess.value ? REASSESS_REMOVE_TITLE : REMOVE_TITLE))
+const removeConfirmLabel = computed(() => (isAwaitingReassess.value ? REASSESS_REMOVE_LABEL : REMOVE_CONFIRM_LABEL))
+const removeMessage = computed(() =>
+  isAwaitingReassess.value ? removeReassessMessage.value : buildStudentDiscountRemoveMessage(removingDiscount.value),
+)
 const emptyText = computed(() => {
   if (!isOptionsLoading.value && !areOptionsLoaded.value) return OPTIONS_FAILED_TEXT
   if (areOptionsLoaded.value && !hasSchoolYears.value) return NO_SCHOOL_YEAR_TEXT
@@ -216,21 +228,31 @@ function requestRemove(studentDiscount) {
 function cancelRemove() {
   if (isRemoving.value) return
   removingDiscount.value = null
+  removeReassessMessage.value = ''
 }
 
 async function confirmRemove() {
   if (isRemoving.value || !removingDiscount.value) return
+  const isReassessing = isAwaitingReassess.value
   isRemoving.value = true
+  let isConfirmStepOpened = false
   try {
-    await deleteStudentDiscount(removingDiscount.value.id)
-    toast.success(REMOVE_SUCCESS_MESSAGE)
+    await deleteStudentDiscount(removingDiscount.value.id, isReassessing ? REASSESS_DELETE_PARAMS : undefined)
+    toast.success(isReassessing ? REASSESS_REMOVE_SUCCESS_MESSAGE : REMOVE_SUCCESS_MESSAGE)
   } catch (error) {
-    toastRequestError(error, REMOVE_FAILED_MESSAGE)
+    isConfirmStepOpened = !isReassessing && isReassessConfirmNeeded(error.response)
+    if (isConfirmStepOpened) removeReassessMessage.value = buildReassessDiscountMessage(error.response.data.message, REASSESS_REMOVE_KIND)
+    else toastRequestError(error, REMOVE_FAILED_MESSAGE)
   } finally {
     isRemoving.value = false
-    removingDiscount.value = null
-    loadStudentDiscounts()
+    if (!isConfirmStepOpened) finishRemove()
   }
+}
+
+function finishRemove() {
+  removingDiscount.value = null
+  removeReassessMessage.value = ''
+  loadStudentDiscounts()
 }
 
 watch([areOptionsLoaded, () => schoolYearStore.isActiveSchoolYearLoading], initSchoolYearFilter)
@@ -318,9 +340,9 @@ onBeforeUnmount(cancelPendingSearch)
 
   <ConfirmDialog
     :is-open="isRemoveConfirmOpen"
-    :title="REMOVE_TITLE"
+    :title="removeTitle"
     :message="removeMessage"
-    :confirm-label="REMOVE_CONFIRM_LABEL"
+    :confirm-label="removeConfirmLabel"
     is-destructive
     :is-loading="isRemoving"
     @confirm="confirmRemove"
