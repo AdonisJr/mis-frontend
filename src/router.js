@@ -4,6 +4,7 @@ import {
   ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
+  CURRICULUM_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
   DISCOUNT_TYPES_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
@@ -24,6 +25,7 @@ import {
   STUDENTS_ROUTE_NAME,
   STUDENT_DISCOUNTS_ROUTE_NAME,
   STUDENT_LEDGER_ROUTE_NAME,
+  SUBJECTS_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 
@@ -99,6 +101,18 @@ const routes = [
         name: SECTIONS_ROUTE_NAME,
         component: () => import('@/views/SectionsView.vue'),
         meta: { roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME], title: 'Sections' },
+      },
+      {
+        path: 'subjects',
+        name: SUBJECTS_ROUTE_NAME,
+        component: () => import('@/views/SubjectsView.vue'),
+        meta: { roles: ROUTE_ROLES[SUBJECTS_ROUTE_NAME], title: 'Subjects' },
+      },
+      {
+        path: 'curriculum',
+        name: CURRICULUM_ROUTE_NAME,
+        component: () => import('@/views/CurriculumView.vue'),
+        meta: { roles: ROUTE_ROLES[CURRICULUM_ROUTE_NAME], title: 'Curriculum' },
       },
       {
         path: 'fee-schedules',

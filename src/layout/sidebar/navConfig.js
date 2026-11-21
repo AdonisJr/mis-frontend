@@ -2,6 +2,7 @@ import {
   BadgePercent,
   Banknote,
   BookOpen,
+  BookText,
   CalendarCheck,
   CalendarClock,
   CalendarRange,
@@ -12,6 +13,7 @@ import {
   IdCard,
   LayoutDashboard,
   LayoutGrid,
+  LibraryBig,
   Receipt,
   ShieldAlert,
   Users,
@@ -21,6 +23,7 @@ import {
   ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
+  CURRICULUM_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
   DISCOUNT_TYPES_ROUTE_NAME,
   EMPLOYEES_ROUTE_NAME,
@@ -35,12 +38,14 @@ import {
   SECTIONS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
   STUDENT_DISCOUNTS_ROUTE_NAME,
+  SUBJECTS_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 
 const PEOPLE_GROUP = 'People'
 const ATTENDANCE_GROUP = 'Attendance'
 const SETUP_GROUP = 'Setup'
+const ACADEMICS_GROUP = 'Academics'
 const BILLING_GROUP = 'Billing'
 
 export const NAV_ROW_HEADING = 'heading'
@@ -57,6 +62,8 @@ export const NAV_ITEMS = [
   { label: 'School Years', group: SETUP_GROUP, icon: CalendarRange, routeName: SCHOOL_YEARS_ROUTE_NAME, roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME] },
   { label: 'Programs', group: SETUP_GROUP, icon: BookOpen, routeName: PROGRAMS_ROUTE_NAME, roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME] },
   { label: 'Sections', group: SETUP_GROUP, icon: LayoutGrid, routeName: SECTIONS_ROUTE_NAME, roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME] },
+  { label: 'Subjects', group: ACADEMICS_GROUP, icon: BookText, routeName: SUBJECTS_ROUTE_NAME, roles: ROUTE_ROLES[SUBJECTS_ROUTE_NAME] },
+  { label: 'Curriculum', group: ACADEMICS_GROUP, icon: LibraryBig, routeName: CURRICULUM_ROUTE_NAME, roles: ROUTE_ROLES[CURRICULUM_ROUTE_NAME] },
   { label: 'Fee schedules', group: BILLING_GROUP, icon: Wallet, routeName: FEE_SCHEDULES_ROUTE_NAME, roles: ROUTE_ROLES[FEE_SCHEDULES_ROUTE_NAME] },
   { label: 'Payment plans', group: BILLING_GROUP, icon: CalendarClock, routeName: PAYMENT_PLANS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_PLANS_ROUTE_NAME] },
   { label: 'Discount types', group: BILLING_GROUP, icon: BadgePercent, routeName: DISCOUNT_TYPES_ROUTE_NAME, roles: ROUTE_ROLES[DISCOUNT_TYPES_ROUTE_NAME] },
