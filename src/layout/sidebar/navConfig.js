@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   Receipt,
+  ShieldAlert,
   Users,
   Wallet,
 } from '@lucide/vue'
@@ -26,6 +27,7 @@ import {
   ENROLLMENT_ROUTE_NAME,
   FEE_SCHEDULES_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
+  PAYMENT_HOLDS_ROUTE_NAME,
   PAYMENT_PLANS_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
@@ -61,6 +63,7 @@ export const NAV_ITEMS = [
   { label: 'Student discounts', group: BILLING_GROUP, icon: HandCoins, routeName: STUDENT_DISCOUNTS_ROUTE_NAME, roles: ROUTE_ROLES[STUDENT_DISCOUNTS_ROUTE_NAME] },
   { label: 'Assessments', group: BILLING_GROUP, icon: Receipt, routeName: ASSESSMENTS_ROUTE_NAME, roles: ROUTE_ROLES[ASSESSMENTS_ROUTE_NAME] },
   { label: 'Payments', group: BILLING_GROUP, icon: Banknote, routeName: PAYMENTS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENTS_ROUTE_NAME] },
+  { label: 'Payment holds', group: BILLING_GROUP, icon: ShieldAlert, routeName: PAYMENT_HOLDS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME] },
 ]
 
 export function buildNavRows(navItems) {
