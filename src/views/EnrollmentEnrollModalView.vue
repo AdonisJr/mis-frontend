@@ -3,10 +3,15 @@ import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
 import Modal from '@/components/modal/Modal.vue'
 import EnrollmentFormFields from '@/components/EnrollmentFormFields.vue'
+import PaymentHoldNotice from '@/components/PaymentHoldNotice.vue'
+import PromissoryNoteGrantModalView from '@/views/PromissoryNoteGrantModalView.vue'
 import { enrollStudent } from '@/services/enrollmentService.js'
 import { fetchAllSections } from '@/services/sectionService.js'
 import { fetchStudents } from '@/services/studentService.js'
+import { ENROLLMENT_HOLD_ERROR_KEY, fetchHoldCheck } from '@/services/paymentHoldService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
+import { PAYMENT_RECORDER_ROLES } from '@/routeRoles.js'
+import { useAuthStore } from '@/stores/authStore.js'
 import {
   buildEnrollPayload,
   buildSectionOptionLabel,
@@ -18,6 +23,8 @@ import {
   isTermRequired,
   toIsoDate,
 } from '@/utils/enrollmentForm.js'
+import { buildHoldNoticeRows, buildHoldNoticeSummary, listGrantableYears } from '@/utils/paymentHoldDisplay.js'
+import { buildHoldCheckParams } from '@/utils/paymentHoldSearch.js'
 import { toRecordId } from '@/utils/sectionForm.js'
 import {
   applySearchChange,
@@ -36,6 +43,8 @@ const SECTIONS_FAILED_MESSAGE = 'Could not load sections.'
 const STUDENTS_FAILED_MESSAGE = 'Could not search students.'
 const SAVE_FAILED_MESSAGE = 'Could not save the enrollment.'
 const SAVE_SUCCESS_MESSAGE = 'Student enrolled.'
+const HOLD_CHECK_FAILED_MESSAGE = 'Could not check payment holds.'
+const HOLD_CHECKING_TEXT = 'Checking payment holds…'
 
 const SECONDARY_BUTTON_CLASS =
   'inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-sm font-semibold hover:bg-page focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60'
@@ -59,11 +68,29 @@ const studentSearchText = ref('')
 const studentOptions = ref([])
 const isStudentSearching = ref(false)
 const pickedStudent = ref(null)
+const holdCheck = ref(null)
+const isHoldChecking = ref(false)
+const guardMessage = ref('')
+const isGrantOpen = ref(false)
+const grantSchoolYearId = ref('')
 let sectionRequestId = 0
 let studentRequestId = 0
 let studentSearchTimer = null
+let holdRequestId = 0
 
 const toast = useToast()
+const authStore = useAuthStore()
+
+const noticeRows = computed(() => buildHoldNoticeRows(holdCheck.value?.unpaid_years))
+const isOnHold = computed(() => holdCheck.value?.on_hold === true || guardMessage.value !== '')
+const canGrant = computed(() => authStore.hasAnyRole(PAYMENT_RECORDER_ROLES))
+const grantYears = computed(() => listGrantableYears(holdCheck.value?.unpaid_years))
+const isNoticeShown = computed(() => noticeRows.value.length > 0 || guardMessage.value !== '')
+const noticeSummary = computed(() => {
+  if (noticeRows.value.length === 0) return guardMessage.value
+  return buildHoldNoticeSummary(noticeRows.value, isOnHold.value)
+})
+const grantStudentId = computed(() => toRecordId(formValues.value.student_id) ?? 0)
 
 const selectedSection = computed(() => findSection(sections.value, formValues.value.section_id))
 const isTermVisible = computed(() => isTermRequired(selectedSection.value))
@@ -129,14 +156,60 @@ function updateStudentSearch(nextSearch) {
   studentSearchTimer = setTimeout(searchStudents, SEARCH_DEBOUNCE_MS)
 }
 
+function clearHold() {
+  holdRequestId += 1
+  holdCheck.value = null
+  guardMessage.value = ''
+  isHoldChecking.value = false
+}
+
+async function loadHoldCheck() {
+  const holdCheckParams = buildHoldCheckParams(formValues.value.student_id, props.schoolYearId)
+  if (holdCheckParams === null) {
+    clearHold()
+    return
+  }
+  const requestId = ++holdRequestId
+  isHoldChecking.value = true
+  try {
+    const holdResponse = await fetchHoldCheck(holdCheckParams)
+    if (requestId !== holdRequestId) return
+    holdCheck.value = holdResponse?.hold ?? null
+  } catch (error) {
+    if (requestId !== holdRequestId) return
+    holdCheck.value = null
+    toastRequestError(error, HOLD_CHECK_FAILED_MESSAGE)
+  } finally {
+    if (requestId === holdRequestId) isHoldChecking.value = false
+  }
+}
+
 function pickStudent(student) {
   pickedStudent.value = student
+  guardMessage.value = ''
   formValues.value = { ...formValues.value, student_id: String(student.id) }
+  loadHoldCheck()
 }
 
 function clearStudent() {
   pickedStudent.value = null
   formValues.value = { ...formValues.value, student_id: '' }
+  clearHold()
+}
+
+function openGrant(schoolYearId) {
+  grantSchoolYearId.value = schoolYearId
+  isGrantOpen.value = true
+}
+
+function closeGrant() {
+  isGrantOpen.value = false
+}
+
+function handleGranted() {
+  isGrantOpen.value = false
+  guardMessage.value = ''
+  loadHoldCheck()
 }
 
 function updateFormValues(nextFormValues) {
@@ -156,11 +229,13 @@ function resetModal() {
   studentOptions.value = []
   isStudentSearching.value = false
   pickedStudent.value = null
+  isGrantOpen.value = false
+  clearHold()
   loadSections()
 }
 
 function closeModal() {
-  if (isSaving.value) return
+  if (isSaving.value || isGrantOpen.value) return
   cancelPendingStudentSearch()
   emit('close')
 }
@@ -168,12 +243,16 @@ function closeModal() {
 function applySaveError(error) {
   const status = error.response?.status
   const validationErrors = error.response?.data?.errors
-  if (status === HTTP_UNPROCESSABLE_ENTITY && validationErrors) fieldErrors.value = validationErrors
+  const { [ENROLLMENT_HOLD_ERROR_KEY]: holdMessages, ...fieldMessages } = validationErrors ?? {}
+  const isGuardRefusal = status === HTTP_UNPROCESSABLE_ENTITY && Array.isArray(holdMessages)
+  if (status === HTTP_UNPROCESSABLE_ENTITY && validationErrors) fieldErrors.value = fieldMessages
+  if (isGuardRefusal) guardMessage.value = holdMessages[0]
   toastRequestError(error, SAVE_FAILED_MESSAGE)
+  if (isGuardRefusal) loadHoldCheck()
 }
 
 async function saveEnrollment() {
-  if (isSaving.value) return
+  if (isSaving.value || isOnHold.value) return
   fieldErrors.value = findEnrollFormErrors(formValues.value, selectedSection.value)
   if (Object.keys(fieldErrors.value).length > 0) {
     toast.error(INVALID_FIELDS_MESSAGE)
@@ -201,8 +280,8 @@ onBeforeUnmount(cancelPendingStudentSearch)
 </script>
 
 <template>
-  <Modal :is-open="isOpen" :title="ENROLL_TITLE" @close="closeModal">
-    <form :id="ENROLL_FORM_ID" novalidate @submit.prevent="saveEnrollment">
+  <Modal :is-open="isOpen && !isGrantOpen" :title="ENROLL_TITLE" @close="closeModal">
+    <form :id="ENROLL_FORM_ID" novalidate class="space-y-4" @submit.prevent="saveEnrollment">
       <EnrollmentFormFields
         :model-value="formValues"
         :field-errors="fieldErrors"
@@ -219,14 +298,36 @@ onBeforeUnmount(cancelPendingStudentSearch)
         @pick-student="pickStudent"
         @clear-student="clearStudent"
       />
+      <p v-if="isHoldChecking" class="text-xs text-ink-muted">{{ HOLD_CHECKING_TEXT }}</p>
+      <PaymentHoldNotice
+        v-if="isNoticeShown"
+        :rows="noticeRows"
+        :summary-text="noticeSummary"
+        :can-grant="canGrant"
+        :is-on-hold="isOnHold"
+        @grant="openGrant"
+      />
     </form>
     <template #footer>
       <button type="button" :class="SECONDARY_BUTTON_CLASS" class="text-ink" :disabled="isSaving" @click="closeModal">
         Cancel
       </button>
-      <button type="submit" :form="ENROLL_FORM_ID" :class="PRIMARY_BUTTON_CLASS" :disabled="isSaving">
+      <button
+        type="submit"
+        :form="ENROLL_FORM_ID"
+        :class="PRIMARY_BUTTON_CLASS"
+        :disabled="isSaving || isOnHold || isHoldChecking"
+      >
         {{ isSaving ? 'Saving…' : 'Enroll' }}
       </button>
     </template>
   </Modal>
+  <PromissoryNoteGrantModalView
+    :is-open="isOpen && isGrantOpen"
+    :student-id="grantStudentId"
+    :balance-years="grantYears"
+    :school-year-id="grantSchoolYearId"
+    @close="closeGrant"
+    @granted="handleGranted"
+  />
 </template>

@@ -12,6 +12,7 @@ import {
   LOGIN_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
+  PAYMENT_HOLDS_ROUTE_NAME,
   PAYMENT_PLANS_ROUTE_NAME,
   PAYMENT_RECEIPT_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
@@ -152,6 +153,12 @@ const routes = [
         name: PAYMENT_RECEIPT_ROUTE_NAME,
         component: () => import('@/views/PaymentReceiptView.vue'),
         meta: { roles: ROUTE_ROLES[PAYMENT_RECEIPT_ROUTE_NAME], title: 'Acknowledgment receipt', isPrintable: true },
+      },
+      {
+        path: 'payment-holds',
+        name: PAYMENT_HOLDS_ROUTE_NAME,
+        component: () => import('@/views/PaymentHoldsView.vue'),
+        meta: { roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME], title: 'Payment holds' },
       },
       {
         path: ':pathMatch(.*)*',
