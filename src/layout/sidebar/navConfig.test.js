@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { NAV_ITEMS, buildNavRows, listVisibleNavItems } from '@/layout/sidebar/navConfig.js'
-import { ROOMS_ROUTE_NAME, SECTIONS_ROUTE_NAME } from '@/routeNames.js'
+import { CLASS_SCHEDULES_ROUTE_NAME, CURRICULUM_ROUTE_NAME, ROOMS_ROUTE_NAME, SECTIONS_ROUTE_NAME } from '@/routeNames.js'
 
 function listRouteNames(userRoles) {
   return listVisibleNavItems(NAV_ITEMS, userRoles).map((navItem) => navItem.routeName)
@@ -30,6 +30,17 @@ describe('listVisibleNavItems', () => {
     expect(roomsItem.group).toBe('Setup')
     expect(listRouteNames(['admin'])).toContain(ROOMS_ROUTE_NAME)
     expect(listRouteNames(['registrar'])).not.toContain(ROOMS_ROUTE_NAME)
+  })
+
+  it('puts Class schedules right after Curriculum in Academics, for admin and registrar', () => {
+    const curriculumIndex = NAV_ITEMS.findIndex((navItem) => navItem.routeName === CURRICULUM_ROUTE_NAME)
+    const classSchedulesItem = NAV_ITEMS[curriculumIndex + 1]
+    expect(classSchedulesItem.routeName).toBe(CLASS_SCHEDULES_ROUTE_NAME)
+    expect(classSchedulesItem.group).toBe('Academics')
+    expect(listRouteNames(['admin'])).toContain(CLASS_SCHEDULES_ROUTE_NAME)
+    expect(listRouteNames(['registrar'])).toContain(CLASS_SCHEDULES_ROUTE_NAME)
+    expect(listRouteNames(['cashier'])).not.toContain(CLASS_SCHEDULES_ROUTE_NAME)
+    expect(listRouteNames(['teacher'])).not.toContain(CLASS_SCHEDULES_ROUTE_NAME)
   })
 
   it('returns an empty list for non-array items', () => {
