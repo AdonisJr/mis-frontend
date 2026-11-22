@@ -4,6 +4,7 @@ import {
   ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
+  CLASS_LIST_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
   CURRICULUM_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
@@ -12,6 +13,7 @@ import {
   ENROLLMENT_ROUTE_NAME,
   FEE_SCHEDULES_ROUTE_NAME,
   LOGIN_ROUTE_NAME,
+  MY_CLASSES_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
   PAYMENT_HOLDS_ROUTE_NAME,
@@ -28,7 +30,6 @@ import {
   STUDENT_DISCOUNTS_ROUTE_NAME,
   STUDENT_LEDGER_ROUTE_NAME,
   SUBJECTS_ROUTE_NAME,
-  TEACHER_HOME_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 
@@ -190,10 +191,16 @@ const routes = [
         meta: { roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME], title: 'Payment holds' },
       },
       {
-        path: 'teacher',
-        name: TEACHER_HOME_ROUTE_NAME,
-        component: () => import('@/views/TeacherHomeView.vue'),
-        meta: { roles: ROUTE_ROLES[TEACHER_HOME_ROUTE_NAME], title: 'Welcome' },
+        path: 'my-classes',
+        name: MY_CLASSES_ROUTE_NAME,
+        component: () => import('@/views/MyClassesView.vue'),
+        meta: { roles: ROUTE_ROLES[MY_CLASSES_ROUTE_NAME], title: 'My classes', isPrintable: true },
+      },
+      {
+        path: 'my-classes/classes/:classId(\\d+)',
+        name: CLASS_LIST_ROUTE_NAME,
+        component: () => import('@/views/ClassListView.vue'),
+        meta: { roles: ROUTE_ROLES[CLASS_LIST_ROUTE_NAME], title: 'Class list', isPrintable: true },
       },
       {
         path: ':pathMatch(.*)*',

@@ -1,8 +1,8 @@
 import {
   DASHBOARD_ROUTE_NAME,
+  MY_CLASSES_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
-  TEACHER_HOME_ROUTE_NAME,
 } from '@/routeNames.js'
 
 export const ADMIN_ROLE = 'admin'
@@ -17,7 +17,7 @@ const LANDING_ROUTES = [
   { role: ADMIN_ROLE, routeName: DASHBOARD_ROUTE_NAME },
   { role: REGISTRAR_ROLE, routeName: STUDENTS_ROUTE_NAME },
   { role: CASHIER_ROLE, routeName: PAYMENTS_ROUTE_NAME },
-  { role: TEACHER_ROLE, routeName: TEACHER_HOME_ROUTE_NAME },
+  { role: TEACHER_ROLE, routeName: MY_CLASSES_ROUTE_NAME },
 ]
 
 export function findLandingRouteName(userRoles) {

@@ -2,14 +2,15 @@ import { describe, it, expect } from 'vitest'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 import { EMPLOYEE_ROLES, TEACHER_ROLE } from '@/utils/roleAccess.js'
 import {
+  CLASS_LIST_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
+  MY_CLASSES_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
-  TEACHER_HOME_ROUTE_NAME,
 } from '@/routeNames.js'
 
-const TEACHER_FRIENDLY_ROUTES = [ROOT_ROUTE_NAME, NOT_FOUND_ROUTE_NAME, TEACHER_HOME_ROUTE_NAME]
+const TEACHER_FRIENDLY_ROUTES = [ROOT_ROUTE_NAME, NOT_FOUND_ROUTE_NAME, MY_CLASSES_ROUTE_NAME, CLASS_LIST_ROUTE_NAME]
 
 describe('ROUTE_ROLES', () => {
   it('lets every employee role open Root and NotFound', () => {
@@ -17,8 +18,14 @@ describe('ROUTE_ROLES', () => {
     expect(ROUTE_ROLES[NOT_FOUND_ROUTE_NAME]).toEqual(EMPLOYEE_ROLES)
   })
 
-  it('gives the teacher home to teachers only', () => {
-    expect(ROUTE_ROLES[TEACHER_HOME_ROUTE_NAME]).toEqual(['teacher'])
+  it('gives My classes and the class list to admin, registrar and teacher', () => {
+    expect(ROUTE_ROLES[MY_CLASSES_ROUTE_NAME]).toEqual(['admin', 'registrar', 'teacher'])
+    expect(ROUTE_ROLES[CLASS_LIST_ROUTE_NAME]).toEqual(['admin', 'registrar', 'teacher'])
+  })
+
+  it('keeps the cashier out of My classes and the class list', () => {
+    expect(ROUTE_ROLES[MY_CLASSES_ROUTE_NAME]).not.toContain('cashier')
+    expect(ROUTE_ROLES[CLASS_LIST_ROUTE_NAME]).not.toContain('cashier')
   })
 
   it('keeps teacher out of every other route', () => {
