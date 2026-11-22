@@ -206,8 +206,8 @@ src/
                         year (active, else newest) + search + type + source filters, paginated table, Assign, edit (reference no. and remarks only), Remove;
                         DiscountTypeFormModalView + StudentDiscountFormModalView (embedded, not routed: type form; assign modal searches enrolled and
                         completed students with two /enrollments calls, filters types by the student's stage and held discounts, edit notes);
-                        AssessmentsView (/assessments, admin + registrar, Billing) — school year (active, else newest) + search + grade level + plan filters, paginated
-                        table, Assess; StatementOfAccountView (/assessments/:assessmentId, admin + registrar, meta.isPrintable) — printable statement, Print, Re-assess
+                        AssessmentsView (/assessments, any staff: admin, registrar, cashier; Billing) — school year (active, else newest) + search + grade level + plan filters, paginated
+                        table, Assess; StatementOfAccountView (/assessments/:assessmentId, any staff: admin, registrar, cashier; meta.isPrintable) — printable statement, Print, Re-assess
                         (current only), history; AssessmentAssessModalView (embedded, not routed: candidate picker, plan, live preview, Save / Re-assess with ConfirmDialog);
                         Student discounts assign/remove show a re-assess confirm step when the student has a current assessment (mis-18);
                         PaymentsView (/payments, all staff, Billing; cashier landing) — date-range/method/cashier/status filters, search, collection total, paginated table,
