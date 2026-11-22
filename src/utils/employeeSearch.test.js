@@ -40,6 +40,10 @@ describe('buildEmployeeListParams', () => {
     })
   })
 
+  it('passes role=teacher through', () => {
+    expect(buildEmployeeListParams({ ...createEmployeeFilters(), role: 'teacher' })).toEqual({ page: 1, role: 'teacher' })
+  })
+
   it('drops the role param for All roles', () => {
     expect(buildEmployeeListParams({ ...createEmployeeFilters(), role: '' })).toEqual({ page: 1 })
   })

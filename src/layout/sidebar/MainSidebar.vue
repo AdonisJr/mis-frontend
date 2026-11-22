@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { PanelLeftClose, PanelLeftOpen, X } from '@lucide/vue'
 import { useAuthStore } from '@/stores/authStore.js'
-import { NAV_ITEMS, NAV_ROW_HEADING, buildNavRows } from '@/layout/sidebar/navConfig.js'
+import { NAV_ITEMS, NAV_ROW_HEADING, buildNavRows, listVisibleNavItems } from '@/layout/sidebar/navConfig.js'
 
 const props = defineProps({
   isCollapsed: { type: Boolean, default: false },
@@ -16,7 +16,7 @@ const route = useRoute()
 const authStore = useAuthStore()
 const closeButton = ref(null)
 
-const navRows = computed(() => buildNavRows(NAV_ITEMS.filter((navItem) => authStore.hasAnyRole(navItem.roles))))
+const navRows = computed(() => buildNavRows(listVisibleNavItems(NAV_ITEMS, authStore.userRoles)))
 const collapsedHiddenClass = computed(() => (props.isCollapsed ? 'md:hidden' : ''))
 const drawerClass = computed(() =>
   props.isDrawerOpen ? 'visible translate-x-0' : 'invisible -translate-x-full md:visible md:translate-x-0',

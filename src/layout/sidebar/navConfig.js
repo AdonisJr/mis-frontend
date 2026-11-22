@@ -8,6 +8,7 @@ import {
   CalendarRange,
   ClipboardList,
   ClipboardPen,
+  DoorOpen,
   GraduationCap,
   HandCoins,
   IdCard,
@@ -34,6 +35,7 @@ import {
   PAYMENT_PLANS_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
+  ROOMS_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
   STUDENTS_ROUTE_NAME,
@@ -41,6 +43,7 @@ import {
   SUBJECTS_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
+import { hasAnyAllowedRole } from '@/utils/roleAccess.js'
 
 const PEOPLE_GROUP = 'People'
 const ATTENDANCE_GROUP = 'Attendance'
@@ -62,6 +65,7 @@ export const NAV_ITEMS = [
   { label: 'School Years', group: SETUP_GROUP, icon: CalendarRange, routeName: SCHOOL_YEARS_ROUTE_NAME, roles: ROUTE_ROLES[SCHOOL_YEARS_ROUTE_NAME] },
   { label: 'Programs', group: SETUP_GROUP, icon: BookOpen, routeName: PROGRAMS_ROUTE_NAME, roles: ROUTE_ROLES[PROGRAMS_ROUTE_NAME] },
   { label: 'Sections', group: SETUP_GROUP, icon: LayoutGrid, routeName: SECTIONS_ROUTE_NAME, roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME] },
+  { label: 'Rooms', group: SETUP_GROUP, icon: DoorOpen, routeName: ROOMS_ROUTE_NAME, roles: ROUTE_ROLES[ROOMS_ROUTE_NAME] },
   { label: 'Subjects', group: ACADEMICS_GROUP, icon: BookText, routeName: SUBJECTS_ROUTE_NAME, roles: ROUTE_ROLES[SUBJECTS_ROUTE_NAME] },
   { label: 'Curriculum', group: ACADEMICS_GROUP, icon: LibraryBig, routeName: CURRICULUM_ROUTE_NAME, roles: ROUTE_ROLES[CURRICULUM_ROUTE_NAME] },
   { label: 'Fee schedules', group: BILLING_GROUP, icon: Wallet, routeName: FEE_SCHEDULES_ROUTE_NAME, roles: ROUTE_ROLES[FEE_SCHEDULES_ROUTE_NAME] },
@@ -72,6 +76,11 @@ export const NAV_ITEMS = [
   { label: 'Payments', group: BILLING_GROUP, icon: Banknote, routeName: PAYMENTS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENTS_ROUTE_NAME] },
   { label: 'Payment holds', group: BILLING_GROUP, icon: ShieldAlert, routeName: PAYMENT_HOLDS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME] },
 ]
+
+export function listVisibleNavItems(navItems, userRoles) {
+  if (!Array.isArray(navItems)) return []
+  return navItems.filter((navItem) => hasAnyAllowedRole(userRoles, navItem.roles))
+}
 
 export function buildNavRows(navItems) {
   if (!Array.isArray(navItems)) return []

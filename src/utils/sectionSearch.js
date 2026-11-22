@@ -6,9 +6,11 @@ const SEARCH_PARAM = 'search'
 const SCHOOL_YEAR_PARAM = 'school_year_id'
 const GRADE_LEVEL_PARAM = 'grade_level_id'
 const PROGRAM_PARAM = 'program_id'
+const ROOM_PARAM = 'room_id'
+const ADVISER_PARAM = 'adviser_id'
 
 export function createSectionFilters() {
-  return { schoolYearId: '', gradeLevelId: '', programId: '', search: '', page: FIRST_PAGE }
+  return { schoolYearId: '', gradeLevelId: '', programId: '', roomId: '', adviserId: '', search: '', page: FIRST_PAGE }
 }
 
 export function buildSectionListParams(sectionFilters) {
@@ -20,9 +22,13 @@ export function buildSectionListParams(sectionFilters) {
   const sectionListParams = { [SCHOOL_YEAR_PARAM]: schoolYearId, [PAGE_PARAM]: listPage }
   const gradeLevelId = toRecordId(sectionFilters.gradeLevelId)
   const programId = toRecordId(sectionFilters.programId)
+  const roomId = toRecordId(sectionFilters.roomId)
+  const adviserId = toRecordId(sectionFilters.adviserId)
   const normalizedSearch = normalizeSearchText(sectionFilters.search)
   if (gradeLevelId !== null) sectionListParams[GRADE_LEVEL_PARAM] = gradeLevelId
   if (programId !== null) sectionListParams[PROGRAM_PARAM] = programId
+  if (roomId !== null) sectionListParams[ROOM_PARAM] = roomId
+  if (adviserId !== null) sectionListParams[ADVISER_PARAM] = adviserId
   if (normalizedSearch !== '') sectionListParams[SEARCH_PARAM] = normalizedSearch
   return sectionListParams
 }
@@ -37,6 +43,14 @@ export function applySectionGradeLevelChange(sectionFilters, nextGradeLevelId) {
 
 export function applySectionProgramChange(sectionFilters, nextProgramId) {
   return { ...sectionFilters, programId: toIdText(nextProgramId), page: FIRST_PAGE }
+}
+
+export function applySectionRoomChange(sectionFilters, nextRoomId) {
+  return { ...sectionFilters, roomId: toIdText(nextRoomId), page: FIRST_PAGE }
+}
+
+export function applySectionAdviserChange(sectionFilters, nextAdviserId) {
+  return { ...sectionFilters, adviserId: toIdText(nextAdviserId), page: FIRST_PAGE }
 }
 
 export function clearUnfitProgramFilter(sectionFilters, programOptions) {

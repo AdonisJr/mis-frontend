@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar/cashier) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12), and the enrollment page (enroll a student into a section, move, drop/transfer/complete; the Students page shows the current section) (mis-13), and term rollover / complete section on the enrollment page (mis-14), and the Billing group with the fee schedules page (fee items, schedules, copy from year) (mis-15), and the payment plans page (installment due dates, down payment, tuition adjustment, copy from year) (mis-16), and the discount types and student discounts pages (global catalog; per-year assignments checked against stage, once per type, one government type) (mis-17), and the assessments page and printable statement of account (preview, save, re-assess with history; discount changes re-assess on confirm) (mis-18), and the cashier role with the payments page, student ledger (record payment, void with reason) and printable acknowledgment receipt (mis-19), and payment holds: the enroll modal hold check and notice, the Payment holds page, promissory notes (grant, cancel) and the ledger hold banner and notes (mis-20), and the Academics group with the subjects catalog (search, type/status filters, add/edit, deactivate/reactivate) and the per-year curriculum (grade level / strand / term groups, total weekly hours, add, remove, move up/down, copy from previous year; read-only for the cashier) (mis-21); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
+Vue 3 + Vite admin SPA for MIS (RFID attendance and student tracking). It talks to mis-backend over REST at `VITE_API_URL` (`http://localhost:8000/api/mis`) and receives realtime RFID card scans through Laravel Echo + pusher-js. Auth (login, guard, logout for admin/registrar/cashier) is in place (mis-1), the Ledger admin shell with a role-filtered menu and placeholder pages (mis-2), school years with an active-year badge (mis-3), and the students page with search, level filter, pagination and add/edit/delete (mis-4), and the employees page (staff accounts: search, role/status filters, add/edit, reset password, deactivate/reactivate) (mis-5), and the programs setup page (SHS strands and college courses: search, stage/status filters, add/edit, deactivate/reactivate, delete) plus a grade-levels service call (mis-10), and terms per school year (term type on the school-year form, a Terms modal with add/edit/delete/set active, the active term in the top-bar badge) (mis-11), and the sections setup page (sections per school year: school year/grade level/program filters, name search, add/edit with a stage-aware program select, delete) (mis-12), and the enrollment page (enroll a student into a section, move, drop/transfer/complete; the Students page shows the current section) (mis-13), and term rollover / complete section on the enrollment page (mis-14), and the Billing group with the fee schedules page (fee items, schedules, copy from year) (mis-15), and the payment plans page (installment due dates, down payment, tuition adjustment, copy from year) (mis-16), and the discount types and student discounts pages (global catalog; per-year assignments checked against stage, once per type, one government type) (mis-17), and the assessments page and printable statement of account (preview, save, re-assess with history; discount changes re-assess on confirm) (mis-18), and the cashier role with the payments page, student ledger (record payment, void with reason) and printable acknowledgment receipt (mis-19), and payment holds: the enroll modal hold check and notice, the Payment holds page, promissory notes (grant, cancel) and the ledger hold banner and notes (mis-20), and the Academics group with the subjects catalog (search, type/status filters, add/edit, deactivate/reactivate) and the per-year curriculum (grade level / strand / term groups, total weekly hours, add, remove, move up/down, copy from previous year; read-only for the cashier) (mis-21), and the teacher role (Teacher in the employee role picker/filter/chip; a teacher-only user lands on a no-screens page with an empty menu and no school-year badge), the admin Rooms setup page (search, type/status filters, add/edit, deactivate/reactivate) and room/adviser pickers, columns and filters on Sections (mis-22); next is the RFID card-assignment flow rebuilt from `enrollment-fe` (same UX, fixed defects).
 
 ## Ownership
 
@@ -30,7 +30,7 @@ src/
   routeNames.js       single source of route-name constants (*_ROUTE_NAME), imported by router, store, views
                         and layout; no route-name literals elsewhere (http.js keeps its 'Login')
   routeRoles.js       single source of page roles: ROUTE_ROLES keyed by the *_ROUTE_NAME constants (every
-                        guarded route incl. Root and NotFound); ADMIN_ONLY_ROLES declared only here; exports ADMIN_REGISTRAR_ROLES (Students, Enrollment, Assess/Re-assess gate) and
+                        guarded route incl. Root and NotFound, both = EMPLOYEE_ROLES); ADMIN_ONLY_ROLES and TEACHER_ONLY_ROLES declared only here; TeacherHome (/teacher) is teacher-only and Rooms (/rooms) admin-only; exports ADMIN_REGISTRAR_ROLES (Students, Enrollment, Assess/Re-assess gate) and
                         PAYMENT_RECORDER_ROLES (admin + cashier: Record payment); read by
                         router.js meta.roles and layout/sidebar/navConfig.js
   router.js           all routes + beforeEach guard: restoreSession() once per app load; each MainPanelLayout
@@ -100,13 +100,16 @@ src/
                         (PUT /promissory-notes/{id}/cancel); exports ENROLLMENT_HOLD_ERROR_KEY = 'hold' (the 422 errors key of POST /enrollments)
                       subjectService.js — fetchSubjects (params page, search, type, status; {subjects, meta}), fetchActiveSubjects (GET /subjects/active, {subjects}, no meta),
                         createSubject, updateSubject, deactivateSubject, reactivateSubject (body-less PUT) on /subjects (item {subject}; never sends is_active)
+                      roomService.js — fetchRooms (params page, search, type, status; {rooms, meta}), fetchActiveRooms (GET /rooms/active, {rooms}, no meta),
+                        createRoom, updateRoom, deactivateRoom, reactivateRoom (body-less PUT) on /rooms (item {room}; never sends is_active; id guard before any request)
+                      teacherService.js — fetchActiveTeachers (GET /teachers/active, {teachers}, no meta)
                       curriculumService.js — fetchCurriculumEntries (params school_year_id required, grade_level_id, program_id, term_number; {curriculum_entries, group_totals}),
                         addCurriculumEntry (POST), updateCurriculumEntrySortOrder (PUT {sort_order}), removeCurriculumEntry (204) on /curriculum-entries (item {curriculum_entry}),
                         copyCurriculum POST /curriculum-entries/copy ({copied_count, skipped_count, skipped})
                       <domain>Service.js for every other domain
   stores/             <name>Store.js → use<Name>Store (cross-page state only)
-                      authStore.js → useAuthStore + ADMIN_ROLE, REGISTRAR_ROLE, CASHIER_ROLE, STAFF_ROLES; getter
-                        landingRouteName (admin → Dashboard, registrar → Students, cashier → Payments, in that precedence, else null);
+                      authStore.js → useAuthStore; role constants and the landing precedence live in utils/roleAccess.js (the store cannot load in node);
+                        getter landingRouteName and hasAnyRole delegate to roleAccess.js (admin → Dashboard, registrar → Students, cashier → Payments, teacher → TeacherHome, in that precedence, else null);
                         the only code that touches localStorage (keys mis_auth_token, mis_auth_user)
                       schoolYearStore.js → useSchoolYearStore: activeSchoolYear + activeTerm for the top-bar badge,
                         loaded by MainTopBar on shell mount (term only when a school year is active), replaced after
@@ -132,8 +135,10 @@ src/
                         ProgramRowActions.vue (Edit / Deactivate or Reactivate / Delete row buttons, emits only)
                         TermFormFields.vue (term select limited to the year's type + start/end dates with 422 errors),
                         TermRowActions.vue (icon-only Set active / Edit / Delete, emits only; Delete disabled for the active term)
-                        SectionFilterBar.vue (search + School year (no "All") + Grade level "All grade levels" + Program "All programs"),
-                        SectionFormFields.vue (school year/grade level/program/name/capacity/room with 422 errors; program select
+                        RoomFilterBar.vue (search + Type "All types" + Status "All statuses"), RoomFormFields.vue (name/building/capacity/type with 422 errors, no is_active),
+                        RoomRowActions.vue (Edit / Deactivate or Reactivate row buttons, emits only) (mis-22)
+                        SectionFilterBar.vue (search + School year (no "All") + Grade level "All grade levels" + Program "All programs" + Room "All rooms" + Adviser "All advisers"),
+                        SectionFormFields.vue (school year/grade level/program/name/capacity/Room select/Adviser select with 422 errors on room_id and adviser_id; program select
                         disabled with a hint for JHS), SectionRowActions.vue (Edit / Delete row buttons, emits only)
                         EnrollmentFilterBar.vue (search + School year + Term "All terms" + Grade level + Section + Status "All statuses"),
                         EnrollmentFormFields.vue (student search + pick, section with seats, term for SHS/college, date, remarks, 422 errors),
@@ -183,7 +188,7 @@ src/
                         paginated program table, search, stage + status filters, add/edit, deactivate/reactivate,
                         delete; SectionsView (/sections, admin, Setup) — paginated section table, school year filter
                         (active year, else newest; empty state without school years), grade level + program filters,
-                        name search, add/edit, delete; EnrollmentView (/enrollment, admin + registrar, People) — paginated enrollment table,
+                        room + adviser filters and columns, name search, add/edit with Room and Adviser selects (active rooms/teachers plus the section's own inactive room or stale adviser), delete; RoomsView (/rooms, admin, Setup) — paginated room table, search, type + status filters, add/edit, deactivate/reactivate (mis-22); TeacherHomeView (/teacher, teacher only) — "No screens yet" card; EnrollmentView (/enrollment, admin + registrar, People) — paginated enrollment table,
                         school year (active, else newest) + term (active, else All terms) + grade level + section + status filters, student search,
                         Enroll, Roll over, Complete section, Move, Drop / Transfer / Complete (ConfirmDialog); EnrollmentEnrollModalView + EnrollmentMoveModalView +
                         EnrollmentRolloverModalView + EnrollmentCompleteModalView (embedded in
@@ -222,18 +227,21 @@ src/
                         NotFoundView (404 + Root)
   layout/             MainPanelLayout.vue = the shell (MainSidebar + MainTopBar + content), parent of every
                         guarded route, drawer/collapse state in memory only; hides sidebar, top bar and padding when printing a route with meta.isPrintable; MainTopBar.vue = menu button,
-                        breadcrumb, page title (meta.title), SchoolYearBadge (both roles; loads the active
-                        school year, then the active term, on mount), UserMenu + logout flow;
+                        breadcrumb, page title (meta.title), SchoolYearBadge (staff roles only; loads the active
+                        school year, then the active term, on mount; skipped for a teacher-only user), UserMenu + logout flow;
                         layout/sidebar/MainSidebar.vue + navConfig.js (one NAV_ITEMS config, items
-                        filtered by the user's roles)
+                        filtered by the user's roles through listVisibleNavItems; Rooms item right after Sections; tests next to it in layout/sidebar/navConfig.test.js; also src/routeRoles.test.js and services/roomService.test.js sit outside src/utils)
   utils/              pure JS helpers (no Vue, DOM or HTTP imports), each with a co-located <name>.test.js:
+                        roleAccess.js (role constants incl. TEACHER_ROLE, STAFF_ROLES, EMPLOYEE_ROLES, landing precedence, findLandingRouteName, hasAnyAllowedRole; node-safe, used by authStore, routeRoles and MainTopBar),
+                        roomDisplay.js (type labels, columns, building/capacity formatters, option label, status dialog texts), roomForm.js (name max 50, building max 100, capacity optional whole ≥ 1, type required; payload without is_active),
+                        roomSearch.js (filters → page/search/type/status params; reuses the exported pickOptionValue of subjectSearch.js) (mis-22)
                         studentSearch.js (filters → list params incl. grade_level_id, page reset on new search/level),
                         studentForm.js (gender list, field labels, empty/edit form, required +
                         12-digit LRN errors in Laravel {field: [msg]} shape, payload without rfid)
                         employeeSearch.js (filters → page/search/role/status params; reuses studentSearch.js
-                        page/search helpers), employeeForm.js (role options, client errors, payloads without
+                        page/search helpers), employeeForm.js (role options incl. Teacher, client errors, payloads without
                         password on edit, role toggle, auth-user shape for the own-record refresh),
-                        employeeDisplay.js (role + Active/Inactive chip classes, contact placeholder, dialog texts)
+                        employeeDisplay.js (role + Active/Inactive chip classes, getEmployeeRoleLabel, contact placeholder, dialog texts)
                         programDisplay.js (stage keys jhs/shs/college → JHS/SHS/College labels, dialog texts),
                         programForm.js (stage options SHS/College, code max 20, description max 1000, client errors,
                         upper-cased code payload without is_active), programSearch.js (filters → page/search/stage/status params;
@@ -242,11 +250,11 @@ src/
                         termDisplay.js (term types semester/trimester, counts 2/3, labels "1st Semester"… and badge
                         "1st Sem"/"3rd Tri", dialog texts), termForm.js (allowed numbers per type, client rules: number,
                         dates inside the year, start < end, no overlap, ordering vs other terms; payload without is_active)
-                        sectionForm.js (select strings → ids, name/room max 255, capacity whole 1…2147483647, program rule by
+                        sectionForm.js (select strings → ids, room_id/adviser_id selects (no client rules), listSelectableRooms/Advisers, getFirstFieldError, name max 255, capacity whole 1…2147483647, program rule by
                         grade level stage: none for JHS, active same-stage or the current one on edit; clears an unfit program;
-                        payload with program_id null for JHS), sectionSearch.js (filters → school_year_id required,
-                        grade_level_id, program_id, search, page; default school year), sectionDisplay.js (table columns,
-                        program code or "—", room or "—", program option labels, delete dialog text)
+                        payload with program_id null for JHS and room_id/adviser_id null when cleared), sectionSearch.js (filters → school_year_id required,
+                        grade_level_id, program_id, room_id, adviser_id, search, page; default school year), sectionDisplay.js (table columns,
+                        program code or "—", room label "name · building" or "—", adviser name or "—", program/adviser option labels, delete dialog text)
                         enrollmentSearch.js (filters → school_year_id required, term_id, section_id, grade_level_id, status, search, page; year
                         change clears term + section; default term), enrollmentForm.js (enroll/move forms, term rule by stage, errors,
                         payloads, seats left, section labels, move targets), enrollmentStatus.js (statuses, chips, row actions, closing

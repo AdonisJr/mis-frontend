@@ -7,7 +7,10 @@ import {
   createEmptySectionForm,
   findGradeLevel,
   findSectionFormErrors,
+  getFirstFieldError,
+  listSelectableAdvisers,
   listSelectablePrograms,
+  listSelectableRooms,
   listStagePrograms,
   toIdText,
   toRecordId,
@@ -31,7 +34,8 @@ const SHS_SECTION = {
   program_id: 1,
   name: 'STEM 11-A',
   capacity: 40,
-  room: 'Rm 101',
+  room: { id: 3, name: 'Rm 101', building: 'Main' },
+  adviser: { id: 12, name: 'Ana Cruz' },
   grade_level: { id: 5, name: 'Grade 11', stage: 'shs' },
   program: { id: 1, code: 'STEM', name: 'Science, Technology, Engineering and Mathematics' },
 }
@@ -43,11 +47,12 @@ const JHS_SECTION = {
   name: 'A',
   capacity: 35,
   room: null,
+  adviser: null,
   grade_level: { id: 1, name: 'Grade 7', stage: 'jhs' },
   program: null,
 }
 
-const VALID_SHS_FORM = { school_year_id: '4', grade_level_id: '5', program_id: '1', name: ' STEM 11-A ', capacity: '40', room: '' }
+const VALID_SHS_FORM = { school_year_id: '4', grade_level_id: '5', program_id: '1', name: ' STEM 11-A ', capacity: '40', room_id: '', adviser_id: '' }
 
 const WHOLE_CAPACITY_MESSAGE = 'Capacity must be a whole number of at least 1.'
 const UNAVAILABLE_PROGRAM_MESSAGE = "Choose an active program of this grade level's stage."
@@ -81,7 +86,7 @@ describe('toIdText', () => {
 
 describe('createEmptySectionForm', () => {
   it('defaults the school year to the given id as a string and leaves the rest empty', () => {
-    const expectedForm = { school_year_id: '4', grade_level_id: '', program_id: '', name: '', capacity: '', room: '' }
+    const expectedForm = { school_year_id: '4', grade_level_id: '', program_id: '', name: '', capacity: '', room_id: '', adviser_id: '' }
     expect(createEmptySectionForm(4)).toEqual(expectedForm)
     expect(createEmptySectionForm('4')).toEqual(expectedForm)
     expect(createEmptySectionForm('').school_year_id).toBe('')
@@ -96,11 +101,13 @@ describe('buildFormFromSection', () => {
       program_id: '1',
       name: 'STEM 11-A',
       capacity: '40',
-      room: 'Rm 101',
+      room_id: '3',
+      adviser_id: '12',
     })
     const jhsForm = buildFormFromSection(JHS_SECTION)
     expect(jhsForm.program_id).toBe('')
-    expect(jhsForm.room).toBe('')
+    expect(jhsForm.room_id).toBe('')
+    expect(jhsForm.adviser_id).toBe('')
   })
 
   it('returns an empty form for a missing section', () => {
@@ -229,12 +236,11 @@ describe('findSectionFormErrors', () => {
     expect(tooLargeErrors.capacity).toEqual(['Capacity must be at most 2147483647.'])
   })
 
-  it('rejects a name or room longer than 255 characters', () => {
-    const tooLongForm = { ...VALID_SHS_FORM, name: 'a'.repeat(256), room: 'a'.repeat(256) }
+  it('rejects a name longer than 255 characters', () => {
+    const tooLongForm = { ...VALID_SHS_FORM, name: 'a'.repeat(256) }
     const formErrors = findSectionFormErrors(tooLongForm, ruleFor(GRADE_11, null))
     expect(formErrors.name).toEqual(['Name must be at most 255 characters.'])
-    expect(formErrors.room).toEqual(['Room must be at most 255 characters.'])
-    const maxLengthForm = { ...VALID_SHS_FORM, name: 'a'.repeat(255), room: 'a'.repeat(255) }
+    const maxLengthForm = { ...VALID_SHS_FORM, name: 'a'.repeat(255) }
     expect(findSectionFormErrors(maxLengthForm, ruleFor(GRADE_11, null))).toEqual({})
   })
 })
@@ -261,7 +267,7 @@ describe('clearUnfitProgram', () => {
 })
 
 describe('buildSectionPayload', () => {
-  it('sends ids and capacity as numbers, a trimmed name and null for an empty room', () => {
+  it('sends ids and capacity as numbers, a trimmed name and null for an empty room and adviser', () => {
     const sectionPayload = buildSectionPayload(VALID_SHS_FORM)
     expect(sectionPayload).toEqual({
       school_year_id: 4,
@@ -269,13 +275,90 @@ describe('buildSectionPayload', () => {
       program_id: 1,
       name: 'STEM 11-A',
       capacity: 40,
-      room: null,
+      room_id: null,
+      adviser_id: null,
     })
-    expect(Object.keys(sectionPayload)).toEqual(['school_year_id', 'grade_level_id', 'program_id', 'name', 'capacity', 'room'])
-    expect(buildSectionPayload({ ...VALID_SHS_FORM, room: ' Rm 101 ' }).room).toBe('Rm 101')
+    expect(Object.keys(sectionPayload)).toEqual([
+      'school_year_id',
+      'grade_level_id',
+      'program_id',
+      'name',
+      'capacity',
+      'room_id',
+      'adviser_id',
+    ])
+  })
+
+  it('sends the chosen room and adviser ids as numbers', () => {
+    const sectionPayload = buildSectionPayload({ ...VALID_SHS_FORM, room_id: '3', adviser_id: '12' })
+    expect(sectionPayload.room_id).toBe(3)
+    expect(sectionPayload.adviser_id).toBe(12)
   })
 
   it('sends program_id null for a JHS section', () => {
     expect(buildSectionPayload({ ...VALID_SHS_FORM, program_id: '' }).program_id).toBeNull()
+  })
+})
+
+describe('buildFormFromSection without room and adviser', () => {
+  it('uses empty strings when the section has no room or adviser keys', () => {
+    const { room, adviser, ...bareSection } = SHS_SECTION
+    const bareForm = buildFormFromSection(bareSection)
+    expect(bareForm.room_id).toBe('')
+    expect(bareForm.adviser_id).toBe('')
+  })
+})
+
+describe('listSelectableRooms', () => {
+  const ROOM_A = { id: 1, name: 'A', building: null, is_active: true }
+  const ROOM_B = { id: 2, name: 'B', building: 'Main', is_active: true }
+
+  it('appends the section room as inactive when it is not among the active rooms', () => {
+    const activeRooms = [ROOM_A, ROOM_B]
+    const selectableRooms = listSelectableRooms(activeRooms, { id: 9, name: 'Old', building: null })
+    expect(selectableRooms).toEqual([ROOM_A, ROOM_B, { id: 9, name: 'Old', building: null, is_active: false }])
+    expect(activeRooms).toEqual([ROOM_A, ROOM_B])
+  })
+
+  it('does not duplicate a listed room and tolerates missing input', () => {
+    expect(listSelectableRooms([ROOM_A, ROOM_B], ROOM_B)).toEqual([ROOM_A, ROOM_B])
+    expect(listSelectableRooms([ROOM_A], null)).toEqual([ROOM_A])
+    expect(listSelectableRooms('x', null)).toEqual([])
+  })
+})
+
+describe('listSelectableAdvisers', () => {
+  const ANA = { id: 12, name: 'Ana Cruz' }
+  const BEN = { id: 13, name: 'Ben Reyes' }
+
+  it('appends a stale adviser flagged as unavailable', () => {
+    const activeTeachers = [ANA]
+    const selectableAdvisers = listSelectableAdvisers(activeTeachers, BEN)
+    expect(selectableAdvisers).toEqual([ANA, { ...BEN, isUnavailable: true }])
+    expect(activeTeachers).toEqual([ANA])
+  })
+
+  it('does not duplicate a listed adviser and tolerates missing input', () => {
+    expect(listSelectableAdvisers([ANA, BEN], BEN)).toEqual([ANA, BEN])
+    expect(listSelectableAdvisers([ANA], null)).toEqual([ANA])
+    expect(listSelectableAdvisers(undefined, null)).toEqual([])
+  })
+})
+
+describe('getFirstFieldError', () => {
+  const ADVISER_MESSAGE = 'Ana Cruz already advises Grade 7 - Rizal in this school year.'
+
+  it('returns the first message of a field', () => {
+    expect(getFirstFieldError({ adviser_id: [ADVISER_MESSAGE] }, 'adviser_id')).toBe(ADVISER_MESSAGE)
+    expect(getFirstFieldError({ room_id: ['The selected room is inactive.', 'x'] }, 'room_id')).toBe(
+      'The selected room is inactive.',
+    )
+  })
+
+  it('returns an empty string when there is no message', () => {
+    expect(getFirstFieldError({ name: ['x'] }, 'room_id')).toBe('')
+    expect(getFirstFieldError({}, 'room_id')).toBe('')
+    expect(getFirstFieldError(null, 'room_id')).toBe('')
+    expect(getFirstFieldError({ room_id: [] }, 'room_id')).toBe('')
   })
 })

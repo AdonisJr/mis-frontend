@@ -7,10 +7,13 @@ export const SECTION_COLUMNS = Object.freeze(
     { key: 'program', label: 'Program' },
     { key: 'capacity', label: 'Capacity' },
     { key: 'room', label: 'Room' },
+    { key: 'adviser', label: 'Adviser' },
   ].map((column) => Object.freeze(column)),
 )
 
 const INACTIVE_SUFFIX = ' (inactive)'
+const UNAVAILABLE_ADVISER_SUFFIX = ' (not an active teacher)'
+const ROOM_BUILDING_SEPARATOR = ' · '
 
 function isRecordObject(record) {
   return record !== null && typeof record === 'object'
@@ -26,10 +29,28 @@ export function formatSectionProgramCode(section) {
   return programCode
 }
 
+export function buildRoomLabel(room) {
+  if (!isRecordObject(room)) return ''
+  const roomName = isFilledText(room.name) ? room.name.trim() : ''
+  if (!isFilledText(room.building)) return roomName
+  return `${roomName}${ROOM_BUILDING_SEPARATOR}${room.building.trim()}`
+}
+
 export function formatSectionRoom(section) {
-  const room = section?.room
-  if (!isFilledText(room)) return NO_VALUE_LABEL
-  return room.trim()
+  const roomLabel = buildRoomLabel(section?.room)
+  return roomLabel === '' ? NO_VALUE_LABEL : roomLabel
+}
+
+export function formatSectionAdviser(section) {
+  const adviserName = section?.adviser?.name
+  if (!isFilledText(adviserName)) return NO_VALUE_LABEL
+  return adviserName.trim()
+}
+
+export function buildAdviserOptionLabel(adviser) {
+  if (!isRecordObject(adviser)) return ''
+  if (adviser.isUnavailable === true) return `${adviser.name}${UNAVAILABLE_ADVISER_SUFFIX}`
+  return adviser.name
 }
 
 export function buildProgramOptionLabel(program) {
