@@ -36,6 +36,7 @@ function requestConfirm() {
 <template>
   <Modal :is-open="isOpen" :title="title" @close="requestCancel">
     <p class="text-sm text-ink">{{ message }}</p>
+    <slot />
     <template #footer>
       <button
         type="button"

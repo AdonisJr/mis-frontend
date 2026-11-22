@@ -17,3 +17,9 @@
 }
 
 @page statement { size: portrait; margin: 12mm; }
+
+@utility print-page-class-record {
+  page: class-record;
+}
+
+@page class-record { size: landscape; margin: 10mm; }

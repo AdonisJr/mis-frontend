@@ -1,8 +1,10 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 import { PRINT_ROW_CLASS } from '@/utils/classListPrint.js'
 
 const LOADING_TEXT = 'Loading…'
+const ACTIONS_HEADER_LABEL = 'Actions'
+const ACTIONS_CELL_CLASS = 'px-4 py-2.5 text-right print:hidden'
 const CHIP_CLASS = 'rounded-full px-2.5 py-0.5 text-xs font-bold'
 const HEADER_CELL_CLASS = 'px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-ink-muted'
 const MONO_COLUMN_KEY = 'lrn'
@@ -16,6 +18,10 @@ const props = defineProps({
   emptyText: { type: String, required: true },
 })
 
+const slots = useSlots()
+
+const hasActions = computed(() => Boolean(slots.actions))
+const columnCount = computed(() => props.columns.length + (hasActions.value ? 1 : 0))
 const listedRows = computed(() => props.rosterGroups.listedRows ?? [])
 const leftRows = computed(() => props.rosterGroups.leftRows ?? [])
 const isEmpty = computed(() => listedRows.value.length === 0 && leftRows.value.length === 0)
@@ -36,16 +42,19 @@ function buildCellClass(column) {
           <th v-for="column in columns" :key="column.key" scope="col" :class="HEADER_CELL_CLASS">
             {{ column.label }}
           </th>
+          <th v-if="hasActions" scope="col" :class="[HEADER_CELL_CLASS, 'print:hidden']">
+            <span class="sr-only">{{ ACTIONS_HEADER_LABEL }}</span>
+          </th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="isLoading && isEmpty">
-          <td :colspan="columns.length" class="border-t border-line px-4 py-8 text-center text-ink-muted">
+          <td :colspan="columnCount" class="border-t border-line px-4 py-8 text-center text-ink-muted">
             {{ LOADING_TEXT }}
           </td>
         </tr>
         <tr v-else-if="isEmpty">
-          <td :colspan="columns.length" class="border-t border-line px-4 py-8 text-center text-ink-muted">
+          <td :colspan="columnCount" class="border-t border-line px-4 py-8 text-center text-ink-muted">
             {{ emptyText }}
           </td>
         </tr>
@@ -56,12 +65,15 @@ function buildCellClass(column) {
             </span>
             <template v-else>{{ rosterRow[column.key] }}</template>
           </td>
+          <td v-if="hasActions" :class="ACTIONS_CELL_CLASS">
+            <slot name="actions" :row="rosterRow" />
+          </td>
         </tr>
       </tbody>
       <tbody v-if="leftRows.length > 0">
         <tr>
           <th
-            :colspan="columns.length"
+            :colspan="columnCount"
             scope="rowgroup"
             class="border-t border-line bg-page px-4 py-2 text-left text-xs font-semibold uppercase tracking-wider text-ink-muted"
           >
@@ -78,6 +90,9 @@ function buildCellClass(column) {
               {{ rosterRow.statusChip.label }}
             </span>
             <template v-else>{{ rosterRow[column.key] }}</template>
+          </td>
+          <td v-if="hasActions" :class="ACTIONS_CELL_CLASS">
+            <slot name="actions" :row="rosterRow" />
           </td>
         </tr>
       </tbody>

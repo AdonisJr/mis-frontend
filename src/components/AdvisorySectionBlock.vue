@@ -1,12 +1,20 @@
 <script setup>
-import { Printer } from '@lucide/vue'
+import { FileText, Printer } from '@lucide/vue'
 import RosterTable from '@/components/RosterTable.vue'
 import TimetableGrid from '@/components/TimetableGrid.vue'
-import { CLASS_LIST_ROUTE_NAME } from '@/routeNames.js'
+import {
+  CLASS_LIST_ROUTE_NAME,
+  CLASS_RECORD_ROUTE_NAME,
+  REPORT_CARD_ROUTE_NAME,
+  SECTION_REPORT_CARDS_ROUTE_NAME,
+} from '@/routeNames.js'
 
 const PANEL_TITLE = 'Advisory section'
 const CLASS_LISTS_TITLE = 'Class lists'
 const WEEK_TITLE = 'Week'
+const PRINT_ALL_REPORT_CARDS_LABEL = 'Print all report cards'
+const REPORT_CARD_LABEL = 'Report card'
+const CLASS_RECORD_LABEL = 'Class record'
 const NO_CLASSES_TEXT = 'No classes scheduled yet.'
 const EMPTY_ROSTER_TEXT = 'No students in this section yet.'
 const NO_MEETINGS_TEXT = 'No meetings this week.'
@@ -29,10 +37,23 @@ const emit = defineEmits(['print'])
   <section class="rounded-lg border border-line bg-surface print:border-0">
     <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
       <h2 class="text-sm font-bold text-ink">{{ PANEL_TITLE }} · {{ advisoryBlock.sectionText }}</h2>
-      <button type="button" :class="[SECONDARY_BUTTON_CLASS, 'print:hidden']" @click="emit('print')">
-        <Printer :size="16" aria-hidden="true" />
-        Print
-      </button>
+      <div class="flex items-center gap-2 print:hidden">
+        <RouterLink
+          :to="{
+            name: SECTION_REPORT_CARDS_ROUTE_NAME,
+            params: { sectionId: advisoryBlock.sectionId },
+            query: linkQuery,
+          }"
+          :class="SECONDARY_BUTTON_CLASS"
+        >
+          <FileText :size="16" aria-hidden="true" />
+          {{ PRINT_ALL_REPORT_CARDS_LABEL }}
+        </RouterLink>
+        <button type="button" :class="SECONDARY_BUTTON_CLASS" @click="emit('print')">
+          <Printer :size="16" aria-hidden="true" />
+          Print
+        </button>
+      </div>
     </div>
     <dl class="flex flex-wrap gap-x-6 gap-y-1 px-4 py-3 text-sm print:hidden">
       <div class="flex gap-2">
@@ -58,7 +79,22 @@ const emit = defineEmits(['print'])
       :roster-groups="advisoryBlock.rosterGroups"
       :columns="rosterColumns"
       :empty-text="EMPTY_ROSTER_TEXT"
-    />
+    >
+      <template #actions="{ row }">
+        <RouterLink
+          :to="{
+            name: REPORT_CARD_ROUTE_NAME,
+            params: { studentId: row.studentId },
+            query: { school_year_id: linkQuery.school_year_id },
+          }"
+          :aria-label="`Open the report card of ${row.name}`"
+          :class="SECONDARY_BUTTON_CLASS"
+        >
+          <FileText :size="16" aria-hidden="true" />
+          {{ REPORT_CARD_LABEL }}
+        </RouterLink>
+      </template>
+    </RosterTable>
   </section>
 
   <section class="rounded-lg border border-line bg-surface print:hidden">
@@ -66,12 +102,19 @@ const emit = defineEmits(['print'])
       <h2 class="text-sm font-bold text-ink">{{ CLASS_LISTS_TITLE }}</h2>
     </div>
     <ul v-if="advisoryBlock.classLinks.length > 0" class="flex flex-wrap gap-2 px-4 py-3">
-      <li v-for="classLink in advisoryBlock.classLinks" :key="classLink.classId">
+      <li v-for="classLink in advisoryBlock.classLinks" :key="classLink.classId" class="flex gap-1">
         <RouterLink
           :to="{ name: CLASS_LIST_ROUTE_NAME, params: { classId: classLink.classId }, query: linkQuery }"
           :class="LINK_CLASS"
         >
           {{ classLink.label }}
+        </RouterLink>
+        <RouterLink
+          :to="{ name: CLASS_RECORD_ROUTE_NAME, params: { classId: classLink.classId }, query: linkQuery }"
+          :aria-label="`Open the class record of ${classLink.label}`"
+          :class="LINK_CLASS"
+        >
+          {{ CLASS_RECORD_LABEL }}
         </RouterLink>
       </li>
     </ul>
