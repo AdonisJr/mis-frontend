@@ -68,5 +68,11 @@ export const useSchoolYearStore = defineStore('schoolYear', {
       this.activeTermVersion += 1
       this.activeTerm = null
     },
+
+    async loadActivePeriod() {
+      await this.loadActiveSchoolYear()
+      if (!this.activeSchoolYear) return
+      await this.loadActiveTerm()
+    },
   },
 })

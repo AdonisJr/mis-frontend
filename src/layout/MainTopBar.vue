@@ -73,7 +73,7 @@ async function loadActiveTermBadge() {
 }
 
 async function loadTopBarBadge() {
-  // the get-active reads are staff-only (403 for a teacher-only user), so they are never requested
+  // teacher-only users get no badge (MIS-22); MyClassesView loads the active year and term itself
   if (!hasStaffRole.value) return
   await loadActiveSchoolYearBadge()
   // an active term always belongs to the active school year, so without one there is nothing to load

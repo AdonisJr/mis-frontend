@@ -18,7 +18,7 @@ describe('findLandingRouteName', () => {
     expect(findLandingRouteName(['admin'])).toBe('Dashboard')
     expect(findLandingRouteName(['registrar'])).toBe('Students')
     expect(findLandingRouteName(['cashier'])).toBe('Payments')
-    expect(findLandingRouteName(['teacher'])).toBe('TeacherHome')
+    expect(findLandingRouteName(['teacher'])).toBe('MyClasses')
   })
 
   it('keeps the staff landing when a teacher also holds another role', () => {
