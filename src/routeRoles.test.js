@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 import { EMPLOYEE_ROLES, TEACHER_ROLE } from '@/utils/roleAccess.js'
 import {
+  CLASS_SCHEDULES_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
@@ -29,5 +30,9 @@ describe('ROUTE_ROLES', () => {
 
   it('limits Rooms to admin', () => {
     expect(ROUTE_ROLES[ROOMS_ROUTE_NAME]).toEqual(['admin'])
+  })
+
+  it('limits Class schedules to admin and registrar', () => {
+    expect(ROUTE_ROLES[CLASS_SCHEDULES_ROUTE_NAME]).toEqual(['admin', 'registrar'])
   })
 })

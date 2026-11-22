@@ -4,6 +4,7 @@ import {
   ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
+  CLASS_SCHEDULES_ROUTE_NAME,
   CURRICULUM_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
   DISCOUNT_TYPES_ROUTE_NAME,
@@ -121,6 +122,12 @@ const routes = [
         name: CURRICULUM_ROUTE_NAME,
         component: () => import('@/views/CurriculumView.vue'),
         meta: { roles: ROUTE_ROLES[CURRICULUM_ROUTE_NAME], title: 'Curriculum' },
+      },
+      {
+        path: 'class-schedules',
+        name: CLASS_SCHEDULES_ROUTE_NAME,
+        component: () => import('@/views/ClassSchedulesView.vue'),
+        meta: { roles: ROUTE_ROLES[CLASS_SCHEDULES_ROUTE_NAME], title: 'Class schedules' },
       },
       {
         path: 'fee-schedules',
