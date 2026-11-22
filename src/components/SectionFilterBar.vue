@@ -1,5 +1,6 @@
 <script setup>
 import { TEXT_MAX_LENGTH } from '@/utils/studentForm.js'
+import { buildRoomOptionLabel } from '@/utils/roomDisplay.js'
 import { buildProgramOptionLabel } from '@/utils/sectionDisplay.js'
 
 const SEARCH_LABEL = 'Search'
@@ -10,10 +11,16 @@ const GRADE_LEVEL_FILTER_LABEL = 'Grade level'
 const ALL_GRADE_LEVELS_LABEL = 'All grade levels'
 const PROGRAM_FILTER_LABEL = 'Program'
 const ALL_PROGRAMS_LABEL = 'All programs'
+const ROOM_FILTER_LABEL = 'Room'
+const ALL_ROOMS_LABEL = 'All rooms'
+const ADVISER_FILTER_LABEL = 'Adviser'
+const ALL_ADVISERS_LABEL = 'All advisers'
 const SEARCH_INPUT_ID = 'section-search'
 const SCHOOL_YEAR_FILTER_ID = 'section-school-year-filter'
 const GRADE_LEVEL_FILTER_ID = 'section-grade-level-filter'
 const PROGRAM_FILTER_ID = 'section-program-filter'
+const ROOM_FILTER_ID = 'section-room-filter'
+const ADVISER_FILTER_ID = 'section-adviser-filter'
 const INPUT_CLASS =
   'w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:bg-page'
 
@@ -22,13 +29,24 @@ defineProps({
   schoolYearId: { type: String, required: true },
   gradeLevelId: { type: String, required: true },
   programId: { type: String, required: true },
+  roomId: { type: String, required: true },
+  adviserId: { type: String, required: true },
   schoolYears: { type: Array, required: true },
   gradeLevels: { type: Array, required: true },
   programs: { type: Array, required: true },
+  rooms: { type: Array, required: true },
+  advisers: { type: Array, required: true },
   isDisabled: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:search', 'update:schoolYearId', 'update:gradeLevelId', 'update:programId'])
+const emit = defineEmits([
+  'update:search',
+  'update:schoolYearId',
+  'update:gradeLevelId',
+  'update:programId',
+  'update:roomId',
+  'update:adviserId',
+])
 </script>
 
 <template>
@@ -92,6 +110,36 @@ const emit = defineEmits(['update:search', 'update:schoolYearId', 'update:gradeL
         <option value="">{{ ALL_PROGRAMS_LABEL }}</option>
         <option v-for="program in programs" :key="program.id" :value="String(program.id)">
           {{ buildProgramOptionLabel(program) }}
+        </option>
+      </select>
+    </div>
+    <div class="sm:w-44">
+      <label :for="ROOM_FILTER_ID" class="mb-1 block text-sm font-semibold text-ink">{{ ROOM_FILTER_LABEL }}</label>
+      <select
+        :id="ROOM_FILTER_ID"
+        :value="roomId"
+        :class="INPUT_CLASS"
+        :disabled="isDisabled"
+        @change="emit('update:roomId', $event.target.value)"
+      >
+        <option value="">{{ ALL_ROOMS_LABEL }}</option>
+        <option v-for="room in rooms" :key="room.id" :value="String(room.id)">
+          {{ buildRoomOptionLabel(room) }}
+        </option>
+      </select>
+    </div>
+    <div class="sm:w-44">
+      <label :for="ADVISER_FILTER_ID" class="mb-1 block text-sm font-semibold text-ink">{{ ADVISER_FILTER_LABEL }}</label>
+      <select
+        :id="ADVISER_FILTER_ID"
+        :value="adviserId"
+        :class="INPUT_CLASS"
+        :disabled="isDisabled"
+        @change="emit('update:adviserId', $event.target.value)"
+      >
+        <option value="">{{ ALL_ADVISERS_LABEL }}</option>
+        <option v-for="adviser in advisers" :key="adviser.id" :value="String(adviser.id)">
+          {{ adviser.name }}
         </option>
       </select>
     </div>

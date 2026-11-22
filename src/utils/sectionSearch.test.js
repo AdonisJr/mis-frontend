@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
 import {
+  applySectionAdviserChange,
   applySectionGradeLevelChange,
   applySectionProgramChange,
+  applySectionRoomChange,
   applySectionSchoolYearChange,
   buildSectionListParams,
   clearUnfitProgramFilter,
@@ -18,7 +20,15 @@ function buildFiltersFor(schoolYearId) {
 
 describe('createSectionFilters', () => {
   it('starts without a school year, with all grade levels and programs, an empty search and page 1', () => {
-    expect(createSectionFilters()).toEqual({ schoolYearId: '', gradeLevelId: '', programId: '', search: '', page: 1 })
+    expect(createSectionFilters()).toEqual({
+      schoolYearId: '',
+      gradeLevelId: '',
+      programId: '',
+      roomId: '',
+      adviserId: '',
+      search: '',
+      page: 1,
+    })
   })
 })
 
@@ -38,6 +48,14 @@ describe('buildSectionListParams', () => {
     expect(buildSectionListParams(chosenFilters)).toEqual({ school_year_id: 4, page: 2, grade_level_id: 5, program_id: 1 })
   })
 
+  it('adds the room and adviser as numbers and drops invalid ones', () => {
+    const chosenFilters = { ...buildFiltersFor('4'), roomId: '3', adviserId: '12' }
+    expect(buildSectionListParams(chosenFilters)).toEqual({ school_year_id: 4, page: 1, room_id: 3, adviser_id: 12 })
+    const junkParams = buildSectionListParams({ ...buildFiltersFor('4'), roomId: 'x', adviserId: '0' })
+    expect(junkParams).not.toHaveProperty('room_id')
+    expect(junkParams).not.toHaveProperty('adviser_id')
+  })
+
   it('drops empty or invalid optional filters', () => {
     const listParams = buildSectionListParams({ ...buildFiltersFor('4'), gradeLevelId: '', programId: 'x' })
     expect(listParams).not.toHaveProperty('grade_level_id')
@@ -52,6 +70,20 @@ describe('buildSectionListParams', () => {
   it('falls back to page 1 for an invalid page', () => {
     expect(buildSectionListParams({ ...buildFiltersFor('4'), page: 0 }).page).toBe(1)
     expect(buildSectionListParams({ ...buildFiltersFor('4'), page: '2' }).page).toBe(1)
+  })
+})
+
+describe('applySectionRoomChange', () => {
+  it('stores the room as a string, resets to page 1 and leaves the input unchanged', () => {
+    expect(applySectionRoomChange(FILLED_FILTERS, 3)).toEqual({ ...FILLED_FILTERS, roomId: '3', page: 1 })
+    expect(FILLED_FILTERS.page).toBe(3)
+  })
+})
+
+describe('applySectionAdviserChange', () => {
+  it('stores the adviser as a string, resets to page 1 and clears on null', () => {
+    expect(applySectionAdviserChange(FILLED_FILTERS, '12')).toEqual({ ...FILLED_FILTERS, adviserId: '12', page: 1 })
+    expect(applySectionAdviserChange({ ...FILLED_FILTERS, adviserId: '12' }, null).adviserId).toBe('')
   })
 })
 

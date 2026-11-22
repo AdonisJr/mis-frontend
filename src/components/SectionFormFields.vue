@@ -5,20 +5,24 @@ import {
   SECTION_CAPACITY_MIN,
   SECTION_FIELD_LABELS,
   SECTION_NAME_MAX_LENGTH,
-  SECTION_ROOM_MAX_LENGTH,
+  getFirstFieldError,
 } from '@/utils/sectionForm.js'
-import { buildProgramOptionLabel } from '@/utils/sectionDisplay.js'
+import { buildAdviserOptionLabel, buildProgramOptionLabel } from '@/utils/sectionDisplay.js'
+import { buildRoomOptionLabel } from '@/utils/roomDisplay.js'
 
 const SCHOOL_YEAR_FIELD = 'school_year_id'
 const GRADE_LEVEL_FIELD = 'grade_level_id'
 const PROGRAM_FIELD = 'program_id'
 const NAME_FIELD = 'name'
 const CAPACITY_FIELD = 'capacity'
-const ROOM_FIELD = 'room'
+const ROOM_FIELD = 'room_id'
+const ADVISER_FIELD = 'adviser_id'
 const FIELD_ID_PREFIX = 'section-'
 const OPTIONAL_SUFFIX = ' (optional)'
 const SELECT_PLACEHOLDER = 'Select…'
 const NO_PROGRAM_PLACEHOLDER = 'No program'
+const NO_ROOM_PLACEHOLDER = 'No room'
+const NO_ADVISER_PLACEHOLDER = 'No adviser'
 const PROGRAM_JHS_HINT = 'JHS sections have no program.'
 const PROGRAM_HINT_ID = 'section-program_id-hint'
 const INPUT_CLASS =
@@ -31,6 +35,8 @@ const props = defineProps({
   schoolYears: { type: Array, required: true },
   gradeLevels: { type: Array, required: true },
   programOptions: { type: Array, required: true },
+  roomOptions: { type: Array, required: true },
+  adviserOptions: { type: Array, required: true },
   isProgramForbidden: { type: Boolean, default: false },
 })
 
@@ -41,7 +47,7 @@ function updateField(fieldKey, fieldValue) {
 }
 
 function getFieldError(fieldKey) {
-  return props.fieldErrors[fieldKey]?.[0] ?? ''
+  return getFirstFieldError(props.fieldErrors, fieldKey)
 }
 
 function getFieldId(fieldKey) {
@@ -185,24 +191,49 @@ const programDescribedBy = computed(() => {
       </div>
       <div>
         <label :for="getFieldId(ROOM_FIELD)" class="mb-1 block text-sm font-semibold text-ink">
-          {{ SECTION_FIELD_LABELS.room + OPTIONAL_SUFFIX }}
+          {{ SECTION_FIELD_LABELS.room_id + OPTIONAL_SUFFIX }}
         </label>
-        <input
+        <select
           :id="getFieldId(ROOM_FIELD)"
-          type="text"
-          autocomplete="off"
-          :maxlength="SECTION_ROOM_MAX_LENGTH"
           :value="modelValue[ROOM_FIELD]"
           :class="INPUT_CLASS"
           :disabled="isDisabled"
           :aria-invalid="Boolean(getFieldError(ROOM_FIELD))"
           :aria-describedby="getDescribedBy(ROOM_FIELD)"
-          @input="updateField(ROOM_FIELD, $event.target.value)"
-        />
+          @change="updateField(ROOM_FIELD, $event.target.value)"
+        >
+          <option value="">{{ NO_ROOM_PLACEHOLDER }}</option>
+          <option v-for="roomOption in roomOptions" :key="roomOption.id" :value="String(roomOption.id)">
+            {{ buildRoomOptionLabel(roomOption) }}
+          </option>
+        </select>
         <p v-if="getFieldError(ROOM_FIELD)" :id="getErrorId(ROOM_FIELD)" class="mt-1 text-xs text-red-700">
           {{ getFieldError(ROOM_FIELD) }}
         </p>
       </div>
+    </div>
+
+    <div>
+      <label :for="getFieldId(ADVISER_FIELD)" class="mb-1 block text-sm font-semibold text-ink">
+        {{ SECTION_FIELD_LABELS.adviser_id + OPTIONAL_SUFFIX }}
+      </label>
+      <select
+        :id="getFieldId(ADVISER_FIELD)"
+        :value="modelValue[ADVISER_FIELD]"
+        :class="INPUT_CLASS"
+        :disabled="isDisabled"
+        :aria-invalid="Boolean(getFieldError(ADVISER_FIELD))"
+        :aria-describedby="getDescribedBy(ADVISER_FIELD)"
+        @change="updateField(ADVISER_FIELD, $event.target.value)"
+      >
+        <option value="">{{ NO_ADVISER_PLACEHOLDER }}</option>
+        <option v-for="adviserOption in adviserOptions" :key="adviserOption.id" :value="String(adviserOption.id)">
+          {{ buildAdviserOptionLabel(adviserOption) }}
+        </option>
+      </select>
+      <p v-if="getFieldError(ADVISER_FIELD)" :id="getErrorId(ADVISER_FIELD)" class="mt-1 text-xs text-red-700">
+        {{ getFieldError(ADVISER_FIELD) }}
+      </p>
     </div>
   </div>
 </template>

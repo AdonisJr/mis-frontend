@@ -1,3 +1,5 @@
+import { EMPLOYEE_ROLE_OPTIONS } from '@/utils/employeeForm.js'
+
 export const NO_CONTACT_TEXT = '—'
 export const ROLE_CHIP_CLASS = 'rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-bold text-accent'
 export const ACTIVE_CHIP = Object.freeze({ label: 'Active', colorClass: 'bg-green-100 text-green-800' })
@@ -25,4 +27,9 @@ export function buildReactivateMessage(employee) {
 export function buildPasswordResetMessage(employee) {
   if (!isEmployeeObject(employee)) return ''
   return `Set a new password for ${employee.name}. They are signed out of every session and must log in with the new password.`
+}
+
+export function getEmployeeRoleLabel(roleName) {
+  if (typeof roleName !== 'string') return ''
+  return EMPLOYEE_ROLE_OPTIONS.find((roleOption) => roleOption.value === roleName)?.label ?? roleName
 }

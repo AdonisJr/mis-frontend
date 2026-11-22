@@ -4,6 +4,7 @@ import {
   buildDeactivateMessage,
   buildPasswordResetMessage,
   buildReactivateMessage,
+  getEmployeeRoleLabel,
   getStatusChip,
 } from '@/utils/employeeDisplay.js'
 
@@ -54,5 +55,15 @@ describe('buildDeactivateMessage', () => {
     expect(buildDeactivateMessage(null)).toBe('')
     expect(buildReactivateMessage(null)).toBe('')
     expect(buildPasswordResetMessage(null)).toBe('')
+  })
+})
+
+describe('getEmployeeRoleLabel', () => {
+  it('shows the picker label, the raw value for an unknown role and an empty string for a non-string', () => {
+    expect(getEmployeeRoleLabel('teacher')).toBe('Teacher')
+    expect(getEmployeeRoleLabel('admin')).toBe('Admin')
+    expect(getEmployeeRoleLabel('cashier')).toBe('Cashier')
+    expect(getEmployeeRoleLabel('janitor')).toBe('janitor')
+    expect(getEmployeeRoleLabel(null)).toBe('')
   })
 })

@@ -12,7 +12,9 @@ import SectionRowActions from '@/components/SectionRowActions.vue'
 import { createSection, deleteSection, fetchSections, updateSection } from '@/services/sectionService.js'
 import { fetchGradeLevels } from '@/services/gradeLevelService.js'
 import { fetchAllPrograms } from '@/services/programService.js'
+import { fetchActiveRooms } from '@/services/roomService.js'
 import { fetchSchoolYears } from '@/services/schoolYearService.js'
+import { fetchActiveTeachers } from '@/services/teacherService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
 import {
@@ -23,8 +25,10 @@ import {
   normalizeSearchText,
 } from '@/utils/studentSearch.js'
 import {
+  applySectionAdviserChange,
   applySectionGradeLevelChange,
   applySectionProgramChange,
+  applySectionRoomChange,
   applySectionSchoolYearChange,
   buildSectionListParams,
   clearUnfitProgramFilter,
@@ -39,12 +43,15 @@ import {
   createEmptySectionForm,
   findGradeLevel,
   findSectionFormErrors,
+  listSelectableAdvisers,
   listSelectablePrograms,
+  listSelectableRooms,
   listStagePrograms,
 } from '@/utils/sectionForm.js'
 import {
   SECTION_COLUMNS,
   buildSectionDeleteMessage,
+  formatSectionAdviser,
   formatSectionProgramCode,
   formatSectionRoom,
 } from '@/utils/sectionDisplay.js'
@@ -64,7 +71,7 @@ const HTTP_UNPROCESSABLE_ENTITY = 422
 const HTTP_NOT_FOUND = 404
 
 const LOAD_FAILED_MESSAGE = 'Could not load sections.'
-const OPTIONS_FAILED_MESSAGE = 'Could not load school years, grade levels or programs.'
+const OPTIONS_FAILED_MESSAGE = 'Could not load school years, grade levels, programs, rooms or teachers.'
 const INVALID_FIELDS_MESSAGE = 'Check the highlighted fields.'
 const CREATE_SUCCESS_MESSAGE = 'Section added.'
 const UPDATE_SUCCESS_MESSAGE = 'Section updated.'
@@ -89,6 +96,8 @@ const isListLoading = ref(false)
 const schoolYears = ref([])
 const gradeLevels = ref([])
 const programs = ref([])
+const rooms = ref([])
+const teachers = ref([])
 const isOptionsLoading = ref(true)
 const areOptionsLoaded = ref(false)
 const isSchoolYearFilterReady = ref(false)
@@ -120,12 +129,14 @@ const formProgramOptions = computed(() => {
   const stagePrograms = listStagePrograms(programs.value, formGradeLevel.value.stage)
   return listSelectablePrograms(stagePrograms, editingSection.value?.program_id ?? null)
 })
+const formRoomOptions = computed(() => listSelectableRooms(rooms.value, editingSection.value?.room ?? null))
+const formAdviserOptions = computed(() => listSelectableAdvisers(teachers.value, editingSection.value?.adviser ?? null))
 const formProgramRule = computed(() => buildSectionProgramRule(formGradeLevel.value, formProgramOptions.value))
 const emptyText = computed(() => {
   if (!isOptionsLoading.value && !areOptionsLoaded.value) return OPTIONS_FAILED_TEXT
   if (areOptionsLoaded.value && !hasSchoolYears.value) return NO_SCHOOL_YEAR_TEXT
-  const { gradeLevelId, programId, search } = sectionFilters.value
-  const hasActiveFilter = gradeLevelId !== '' || programId !== '' || search !== ''
+  const { gradeLevelId, programId, roomId, adviserId, search } = sectionFilters.value
+  const hasActiveFilter = [gradeLevelId, programId, roomId, adviserId, search].some((filterValue) => filterValue !== '')
   return hasActiveFilter ? NO_MATCH_TEXT : EMPTY_TEXT
 })
 
@@ -162,10 +173,18 @@ async function loadSections() {
 
 async function loadOptions() {
   try {
-    const [schoolYearResponse, gradeLevelResponse, programResponse] = await Promise.all([fetchSchoolYears(), fetchGradeLevels(), fetchAllPrograms()])
+    const [schoolYearResponse, gradeLevelResponse, programResponse, roomResponse, teacherResponse] = await Promise.all([
+      fetchSchoolYears(),
+      fetchGradeLevels(),
+      fetchAllPrograms(),
+      fetchActiveRooms(),
+      fetchActiveTeachers(),
+    ])
     schoolYears.value = schoolYearResponse?.school_years ?? []
     gradeLevels.value = gradeLevelResponse?.grade_levels ?? []
     programs.value = programResponse?.programs ?? []
+    rooms.value = roomResponse?.rooms ?? []
+    teachers.value = teacherResponse?.teachers ?? []
     areOptionsLoaded.value = true
   } catch (error) {
     toastRequestError(error, OPTIONS_FAILED_MESSAGE)
@@ -212,6 +231,16 @@ function changeGradeLevel(nextGradeLevelId) {
 
 function changeProgram(nextProgramId) {
   sectionFilters.value = applySectionProgramChange(sectionFilters.value, nextProgramId)
+  loadSections()
+}
+
+function changeRoom(nextRoomId) {
+  sectionFilters.value = applySectionRoomChange(sectionFilters.value, nextRoomId)
+  loadSections()
+}
+
+function changeAdviser(nextAdviserId) {
+  sectionFilters.value = applySectionAdviserChange(sectionFilters.value, nextAdviserId)
   loadSections()
 }
 
@@ -338,14 +367,20 @@ onBeforeUnmount(cancelPendingSearch)
       :school-year-id="sectionFilters.schoolYearId"
       :grade-level-id="sectionFilters.gradeLevelId"
       :program-id="sectionFilters.programId"
+      :room-id="sectionFilters.roomId"
+      :adviser-id="sectionFilters.adviserId"
       :school-years="schoolYears"
       :grade-levels="gradeLevels"
       :programs="filterProgramOptions"
+      :rooms="rooms"
+      :advisers="teachers"
       :is-disabled="!areOptionsLoaded"
       @update:search="updateSearchInput"
       @update:school-year-id="changeSchoolYear"
       @update:grade-level-id="changeGradeLevel"
       @update:program-id="changeProgram"
+      @update:room-id="changeRoom"
+      @update:adviser-id="changeAdviser"
     />
     <DataTable
       :columns="SECTION_COLUMNS"
@@ -368,6 +403,9 @@ onBeforeUnmount(cancelPendingSearch)
       </template>
       <template #cell-room="{ row }">
         <span class="block max-w-40 truncate" :title="formatSectionRoom(row)">{{ formatSectionRoom(row) }}</span>
+      </template>
+      <template #cell-adviser="{ row }">
+        <span class="block max-w-40 truncate" :title="formatSectionAdviser(row)">{{ formatSectionAdviser(row) }}</span>
       </template>
       <template #actions="{ row }">
         <SectionRowActions :section="row" @edit="openEditForm(row)" @delete="requestDelete(row)" />
@@ -393,6 +431,8 @@ onBeforeUnmount(cancelPendingSearch)
         :school-years="schoolYears"
         :grade-levels="gradeLevels"
         :program-options="formProgramOptions"
+        :room-options="formRoomOptions"
+        :adviser-options="formAdviserOptions"
         :is-program-forbidden="formProgramRule.isProgramForbidden"
         @update:model-value="updateFormValues"
       />

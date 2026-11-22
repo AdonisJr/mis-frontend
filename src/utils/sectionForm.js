@@ -1,7 +1,6 @@
 import { STAGE_JHS } from '@/utils/programDisplay.js'
 
 export const SECTION_NAME_MAX_LENGTH = 255
-export const SECTION_ROOM_MAX_LENGTH = 255
 export const SECTION_CAPACITY_MIN = 1
 export const SECTION_CAPACITY_MAX = 2147483647
 
@@ -11,7 +10,8 @@ export const SECTION_FIELD_LABELS = Object.freeze({
   program_id: 'Program',
   name: 'Name',
   capacity: 'Capacity',
-  room: 'Room',
+  room_id: 'Room',
+  adviser_id: 'Adviser',
 })
 
 const RECORD_ID_PATTERN = /^[1-9]\d*$/
@@ -21,7 +21,6 @@ const PROGRAM_FORBIDDEN_MESSAGE = 'JHS sections have no program.'
 const PROGRAM_REQUIRED_MESSAGE = 'Program is required for this grade level.'
 const PROGRAM_UNAVAILABLE_MESSAGE = "Choose an active program of this grade level's stage."
 const NAME_TOO_LONG_MESSAGE = 'Name must be at most 255 characters.'
-const ROOM_TOO_LONG_MESSAGE = 'Room must be at most 255 characters.'
 const CAPACITY_WHOLE_MESSAGE = 'Capacity must be a whole number of at least 1.'
 const CAPACITY_MAX_MESSAGE = `Capacity must be at most ${SECTION_CAPACITY_MAX}.`
 
@@ -55,7 +54,8 @@ export function createEmptySectionForm(schoolYearId) {
     program_id: '',
     name: '',
     capacity: '',
-    room: '',
+    room_id: '',
+    adviser_id: '',
   }
 }
 
@@ -67,7 +67,8 @@ export function buildFormFromSection(section) {
     program_id: toIdText(section.program_id),
     name: section.name ?? '',
     capacity: Number.isInteger(section.capacity) ? String(section.capacity) : '',
-    room: section.room ?? '',
+    room_id: toIdText(section.room?.id),
+    adviser_id: toIdText(section.adviser?.id),
   }
 }
 
@@ -129,7 +130,6 @@ export function findSectionFormErrors(formValues, programRule) {
   if (trimmedName === '') formErrors.name = [buildRequiredMessage('name')]
   if (trimmedName.length > SECTION_NAME_MAX_LENGTH) formErrors.name = [NAME_TOO_LONG_MESSAGE]
   if (capacityError !== '') formErrors.capacity = [capacityError]
-  if (toTrimmedText(formValues?.room).length > SECTION_ROOM_MAX_LENGTH) formErrors.room = [ROOM_TOO_LONG_MESSAGE]
   return formErrors
 }
 
@@ -141,13 +141,35 @@ export function clearUnfitProgram(formValues, programRule) {
 }
 
 export function buildSectionPayload(formValues) {
-  const trimmedRoom = toTrimmedText(formValues?.room)
   return {
     school_year_id: toRecordId(formValues?.school_year_id),
     grade_level_id: toRecordId(formValues?.grade_level_id),
     program_id: toRecordId(formValues?.program_id),
     name: toTrimmedText(formValues?.name),
     capacity: Number(toTrimmedText(formValues?.capacity)),
-    room: trimmedRoom === '' ? null : trimmedRoom,
+    room_id: toRecordId(formValues?.room_id),
+    adviser_id: toRecordId(formValues?.adviser_id),
   }
+}
+
+function appendMissingOption(options, currentOption, markerProps) {
+  const listedOptions = Array.isArray(options) ? options : []
+  if (currentOption === null || typeof currentOption !== 'object') return listedOptions
+  if (listedOptions.some((option) => option.id === currentOption.id)) return listedOptions
+  return [...listedOptions, { ...currentOption, ...markerProps }]
+}
+
+// only inactive rooms are missing from /rooms/active, so the section's own room is appended to stay selectable
+export function listSelectableRooms(activeRooms, currentRoom) {
+  return appendMissingOption(activeRooms, currentRoom, { is_active: false })
+}
+
+// an unchanged stale adviser is kept by the backend, so the select must still show it
+export function listSelectableAdvisers(activeTeachers, currentAdviser) {
+  return appendMissingOption(activeTeachers, currentAdviser, { isUnavailable: true })
+}
+
+export function getFirstFieldError(fieldErrors, fieldKey) {
+  const firstError = fieldErrors?.[fieldKey]?.[0]
+  return typeof firstError === 'string' ? firstError : ''
 }

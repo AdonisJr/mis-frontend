@@ -18,6 +18,7 @@ import {
   PAYMENT_RECEIPT_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
+  ROOMS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
   SCHOOL_YEARS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
@@ -26,6 +27,7 @@ import {
   STUDENT_DISCOUNTS_ROUTE_NAME,
   STUDENT_LEDGER_ROUTE_NAME,
   SUBJECTS_ROUTE_NAME,
+  TEACHER_HOME_ROUTE_NAME,
 } from '@/routeNames.js'
 import { ROUTE_ROLES } from '@/routeRoles.js'
 
@@ -103,6 +105,12 @@ const routes = [
         meta: { roles: ROUTE_ROLES[SECTIONS_ROUTE_NAME], title: 'Sections' },
       },
       {
+        path: 'rooms',
+        name: ROOMS_ROUTE_NAME,
+        component: () => import('@/views/RoomsView.vue'),
+        meta: { roles: ROUTE_ROLES[ROOMS_ROUTE_NAME], title: 'Rooms' },
+      },
+      {
         path: 'subjects',
         name: SUBJECTS_ROUTE_NAME,
         component: () => import('@/views/SubjectsView.vue'),
@@ -173,6 +181,12 @@ const routes = [
         name: PAYMENT_HOLDS_ROUTE_NAME,
         component: () => import('@/views/PaymentHoldsView.vue'),
         meta: { roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME], title: 'Payment holds' },
+      },
+      {
+        path: 'teacher',
+        name: TEACHER_HOME_ROUTE_NAME,
+        component: () => import('@/views/TeacherHomeView.vue'),
+        meta: { roles: ROUTE_ROLES[TEACHER_HOME_ROUTE_NAME], title: 'Welcome' },
       },
       {
         path: ':pathMatch(.*)*',

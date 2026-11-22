@@ -8,7 +8,7 @@ const TYPE_PARAM = 'type'
 const STATUS_PARAM = 'status'
 
 // unknown values become '' so they never reach the API, which would answer 422
-function pickOptionValue(filterOptions, candidateValue) {
+export function pickOptionValue(filterOptions, candidateValue) {
   const isKnownValue = filterOptions.some((filterOption) => filterOption.value === candidateValue)
   return isKnownValue ? candidateValue : ''
 }

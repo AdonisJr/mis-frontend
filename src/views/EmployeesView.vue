@@ -17,6 +17,7 @@ import {
   buildDeactivateMessage,
   buildPasswordResetMessage,
   buildReactivateMessage,
+  getEmployeeRoleLabel,
   getStatusChip,
 } from '@/utils/employeeDisplay.js'
 import {
@@ -28,7 +29,8 @@ import {
   updateEmployee,
 } from '@/services/employeeService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
-import { ADMIN_ROLE, useAuthStore } from '@/stores/authStore.js'
+import { useAuthStore } from '@/stores/authStore.js'
+import { ADMIN_ROLE } from '@/utils/roleAccess.js'
 import { LOGIN_ROUTE_NAME } from '@/routeNames.js'
 import {
   FIRST_PAGE,
@@ -421,7 +423,7 @@ onBeforeUnmount(cancelPendingSearch)
       </template>
       <template #cell-roles="{ value }">
         <div class="flex flex-wrap gap-1">
-          <span v-for="roleName in value" :key="roleName" :class="ROLE_CHIP_CLASS">{{ roleName }}</span>
+          <span v-for="roleName in value" :key="roleName" :class="ROLE_CHIP_CLASS">{{ getEmployeeRoleLabel(roleName) }}</span>
         </div>
       </template>
       <template #cell-is_active="{ value }">

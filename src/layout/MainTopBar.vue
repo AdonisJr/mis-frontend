@@ -10,6 +10,7 @@ import { LOGIN_ROUTE_NAME } from '@/routeNames.js'
 import { HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { useAuthStore } from '@/stores/authStore.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
+import { STAFF_ROLES } from '@/utils/roleAccess.js'
 import { buildActiveTermBadgeLabel } from '@/utils/termDisplay.js'
 
 const LOGOUT_SUCCESS_MESSAGE = 'Logged out.'
@@ -28,6 +29,7 @@ const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
+const hasStaffRole = computed(() => authStore.hasAnyRole(STAFF_ROLES))
 const pageTitle = computed(() => route.meta.title ?? '')
 const navGroupLabel = computed(() => findNavGroupLabel(route.name))
 const activeTermLabel = computed(() =>
@@ -71,6 +73,8 @@ async function loadActiveTermBadge() {
 }
 
 async function loadTopBarBadge() {
+  // the get-active reads are staff-only (403 for a teacher-only user), so they are never requested
+  if (!hasStaffRole.value) return
   await loadActiveSchoolYearBadge()
   // an active term always belongs to the active school year, so without one there is nothing to load
   if (!schoolYearStore.activeSchoolYear) return
@@ -104,6 +108,7 @@ defineExpose({ focusMenuButton })
       <h1 class="truncate text-lg font-bold text-ink">{{ pageTitle }}</h1>
     </div>
     <SchoolYearBadge
+      v-if="hasStaffRole"
       :start-date="schoolYearStore.activeSchoolYear?.start_date ?? ''"
       :end-date="schoolYearStore.activeSchoolYear?.end_date ?? ''"
       :is-loading="schoolYearStore.isActiveSchoolYearLoading"

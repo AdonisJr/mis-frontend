@@ -33,11 +33,12 @@ const COMPLETE_ADD_FORM = {
 }
 
 describe('EMPLOYEE_ROLE_OPTIONS', () => {
-  it('offers admin, registrar and cashier with their labels', () => {
+  it('offers admin, registrar, cashier and teacher with their labels', () => {
     expect(EMPLOYEE_ROLE_OPTIONS).toEqual([
       { value: 'admin', label: 'Admin' },
       { value: 'registrar', label: 'Registrar' },
       { value: 'cashier', label: 'Cashier' },
+      { value: 'teacher', label: 'Teacher' },
     ])
   })
 })
@@ -113,7 +114,7 @@ describe('findEmployeeFormErrors', () => {
     expect(findEmployeeFormErrors({ ...COMPLETE_ADD_FORM, roles: [] }, true)).toEqual({
       roles: ['Select at least one role.'],
     })
-    expect(findEmployeeFormErrors({ ...COMPLETE_ADD_FORM, roles: ['teacher'] }, true)).toEqual({
+    expect(findEmployeeFormErrors({ ...COMPLETE_ADD_FORM, roles: ['janitor'] }, true)).toEqual({
       roles: ['Select at least one role.'],
     })
   })
@@ -176,8 +177,13 @@ describe('buildEmployeePayload', () => {
   })
 
   it('keeps only admin and registrar in option order', () => {
-    const editForm = { ...COMPLETE_ADD_FORM, roles: ['registrar', 'teacher', 'admin'] }
+    const editForm = { ...COMPLETE_ADD_FORM, roles: ['registrar', 'janitor', 'admin'] }
     expect(buildEmployeePayload(editForm, false).roles).toEqual(['admin', 'registrar'])
+  })
+
+  it('keeps teacher in option order', () => {
+    const editForm = { ...COMPLETE_ADD_FORM, roles: ['teacher', 'registrar'] }
+    expect(buildEmployeePayload(editForm, false).roles).toEqual(['registrar', 'teacher'])
   })
 
   it('keeps cashier in option order', () => {
@@ -200,9 +206,15 @@ describe('toggleRole', () => {
     expect(selectedRoles).toEqual(['registrar'])
   })
 
+  it('adds teacher and accepts a teacher-only form as having a role', () => {
+    expect(toggleRole(['admin'], 'teacher')).toEqual(['admin', 'teacher'])
+    const teacherForm = { ...COMPLETE_ADD_FORM, roles: ['teacher'] }
+    expect(findEmployeeFormErrors(teacherForm, true)).not.toHaveProperty('roles')
+  })
+
   it('removes a selected role and ignores an unknown role', () => {
     expect(toggleRole(['admin', 'registrar'], 'admin')).toEqual(['registrar'])
-    expect(toggleRole(['registrar'], 'teacher')).toEqual(['registrar'])
+    expect(toggleRole(['registrar'], 'janitor')).toEqual(['registrar'])
   })
 })
 
