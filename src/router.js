@@ -4,6 +4,7 @@ import {
   ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
+  CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_LIST_ROUTE_NAME,
   CLASS_RECORD_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
@@ -192,6 +193,12 @@ const routes = [
         name: PAYMENT_HOLDS_ROUTE_NAME,
         component: () => import('@/views/PaymentHoldsView.vue'),
         meta: { roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME], title: 'Payment holds' },
+      },
+      {
+        path: 'accounting/chart-of-accounts',
+        name: CHART_OF_ACCOUNTS_ROUTE_NAME,
+        component: () => import('@/views/ChartOfAccountsView.vue'),
+        meta: { roles: ROUTE_ROLES[CHART_OF_ACCOUNTS_ROUTE_NAME], title: 'Chart of accounts' },
       },
       {
         path: 'my-classes',

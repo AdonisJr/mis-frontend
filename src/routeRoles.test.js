@@ -1,16 +1,22 @@
 import { describe, it, expect } from 'vitest'
 import { ROUTE_ROLES } from '@/routeRoles.js'
-import { EMPLOYEE_ROLES, TEACHER_ROLE } from '@/utils/roleAccess.js'
+import { ACCOUNTANT_ROLE, EMPLOYEE_ROLES, TEACHER_ROLE } from '@/utils/roleAccess.js'
 import {
+  ASSESSMENTS_ROUTE_NAME,
+  CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_LIST_ROUTE_NAME,
   CLASS_RECORD_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
   MY_CLASSES_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
+  PAYMENTS_ROUTE_NAME,
+  PAYMENT_RECEIPT_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   REPORT_CARD_ROUTE_NAME,
   ROOT_ROUTE_NAME,
   SECTION_REPORT_CARDS_ROUTE_NAME,
+  STATEMENT_OF_ACCOUNT_ROUTE_NAME,
+  STUDENT_LEDGER_ROUTE_NAME,
 } from '@/routeNames.js'
 
 const GRADING_ROUTES = [CLASS_RECORD_ROUTE_NAME, REPORT_CARD_ROUTE_NAME, SECTION_REPORT_CARDS_ROUTE_NAME]
@@ -21,6 +27,15 @@ const TEACHER_FRIENDLY_ROUTES = [
   CLASS_LIST_ROUTE_NAME,
   ...GRADING_ROUTES,
 ]
+
+const BILLING_READ_ROUTES = [
+  ASSESSMENTS_ROUTE_NAME,
+  STATEMENT_OF_ACCOUNT_ROUTE_NAME,
+  PAYMENTS_ROUTE_NAME,
+  STUDENT_LEDGER_ROUTE_NAME,
+  PAYMENT_RECEIPT_ROUTE_NAME,
+]
+const ACCOUNTANT_ROUTES = [ROOT_ROUTE_NAME, NOT_FOUND_ROUTE_NAME, CHART_OF_ACCOUNTS_ROUTE_NAME, ...BILLING_READ_ROUTES]
 
 describe('ROUTE_ROLES', () => {
   it('lets every employee role open Root and NotFound', () => {
@@ -58,5 +73,23 @@ describe('ROUTE_ROLES', () => {
 
   it('limits Class schedules to admin and registrar', () => {
     expect(ROUTE_ROLES[CLASS_SCHEDULES_ROUTE_NAME]).toEqual(['admin', 'registrar'])
+  })
+
+  it('limits the chart of accounts to admin and accountant', () => {
+    expect(ROUTE_ROLES[CHART_OF_ACCOUNTS_ROUTE_NAME]).toEqual(['admin', 'accountant'])
+  })
+
+  it('gives the five read-only Billing routes to admin, registrar, cashier and accountant', () => {
+    for (const routeName of BILLING_READ_ROUTES) {
+      expect(ROUTE_ROLES[routeName]).toEqual(['admin', 'registrar', 'cashier', 'accountant'])
+    }
+  })
+
+  it('keeps accountant out of every other route, Payment holds included', () => {
+    const otherRouteNames = Object.keys(ROUTE_ROLES).filter((routeName) => !ACCOUNTANT_ROUTES.includes(routeName))
+    expect(otherRouteNames).toContain('PaymentHolds')
+    for (const routeName of otherRouteNames) {
+      expect(ROUTE_ROLES[routeName]).not.toContain(ACCOUNTANT_ROLE)
+    }
   })
 })

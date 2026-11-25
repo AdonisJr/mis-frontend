@@ -4,6 +4,7 @@ export const EMPLOYEE_ROLE_OPTIONS = Object.freeze([
   { value: 'admin', label: 'Admin' },
   { value: 'registrar', label: 'Registrar' },
   { value: 'cashier', label: 'Cashier' },
+  { value: 'accountant', label: 'Accountant' },
   { value: 'teacher', label: 'Teacher' },
 ])
 
