@@ -18,6 +18,8 @@ const FIELD_ID_PREFIX = 'account-'
 const OPTIONAL_SUFFIX = ' (optional)'
 const SELECT_PLACEHOLDER = 'Select…'
 const SUBTYPE_HINT = 'Choose a type first.'
+const LOCKED_HINT = 'Code and type are locked because this account is in use.'
+const LOCKED_HINT_ID = 'account-key-locked-hint'
 const CONTRA_HELP = 'Flips the normal balance.'
 const INPUT_CLASS =
   'w-full rounded-md border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1 disabled:bg-page'
@@ -26,6 +28,7 @@ const props = defineProps({
   modelValue: { type: Object, required: true },
   fieldErrors: { type: Object, default: () => ({}) },
   isDisabled: { type: Boolean, default: false },
+  isKeyLocked: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -54,8 +57,11 @@ function getErrorId(fieldKey) {
 }
 
 function getDescribedBy(fieldKey) {
-  if (!getFieldError(fieldKey)) return undefined
-  return getErrorId(fieldKey)
+  const describedByIds = [getFieldError(fieldKey) ? getErrorId(fieldKey) : undefined]
+  const isLockedKey = fieldKey === CODE_FIELD || fieldKey === TYPE_FIELD
+  if (props.isKeyLocked && isLockedKey) describedByIds.push(LOCKED_HINT_ID)
+  const joinedIds = describedByIds.filter(Boolean).join(' ')
+  return joinedIds || undefined
 }
 </script>
 
@@ -75,7 +81,7 @@ function getDescribedBy(fieldKey) {
           :value="modelValue[CODE_FIELD]"
           :class="INPUT_CLASS"
           class="font-mono"
-          :disabled="isDisabled"
+          :disabled="isDisabled || isKeyLocked"
           :aria-invalid="Boolean(getFieldError(CODE_FIELD))"
           :aria-describedby="getDescribedBy(CODE_FIELD)"
           @input="updateField(CODE_FIELD, $event.target.value)"
@@ -115,7 +121,7 @@ function getDescribedBy(fieldKey) {
           :id="getFieldId(TYPE_FIELD)"
           :value="modelValue[TYPE_FIELD]"
           :class="INPUT_CLASS"
-          :disabled="isDisabled"
+          :disabled="isDisabled || isKeyLocked"
           :aria-invalid="Boolean(getFieldError(TYPE_FIELD))"
           :aria-describedby="getDescribedBy(TYPE_FIELD)"
           @change="updateType($event.target.value)"
@@ -153,6 +159,7 @@ function getDescribedBy(fieldKey) {
         </p>
       </div>
     </div>
+    <p v-if="isKeyLocked" :id="LOCKED_HINT_ID" class="text-xs text-ink-muted">{{ LOCKED_HINT }}</p>
 
     <div>
       <label class="flex items-center gap-2 text-sm font-semibold text-ink" :for="getFieldId(CONTRA_FIELD)">

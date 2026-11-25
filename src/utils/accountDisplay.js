@@ -105,6 +105,10 @@ export function getContraChip(account) {
   return account?.is_contra === true ? CONTRA_CHIP : null
 }
 
+export function isAccountUsed(account) {
+  return account?.is_used === true
+}
+
 // plain string order, the same as the server's ORDER BY code
 export function compareAccountCodes(firstAccount, secondAccount) {
   const firstCode = String(firstAccount?.code ?? '')

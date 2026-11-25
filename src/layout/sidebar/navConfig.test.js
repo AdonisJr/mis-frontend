@@ -5,6 +5,8 @@ import {
   CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
   CURRICULUM_ROUTE_NAME,
+  GENERAL_LEDGER_ROUTE_NAME,
+  JOURNAL_ENTRIES_ROUTE_NAME,
   MY_CLASSES_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
   PAYMENT_HOLDS_ROUTE_NAME,
@@ -71,16 +73,25 @@ describe('listVisibleNavItems', () => {
     expect(listVisibleNavItems(undefined, ['admin'])).toEqual([])
   })
 
-  it('puts Chart of accounts last under Accounting, for admin and accountant only', () => {
-    const lastItem = NAV_ITEMS[NAV_ITEMS.length - 1]
-    expect(lastItem.routeName).toBe(CHART_OF_ACCOUNTS_ROUTE_NAME)
-    expect(lastItem.group).toBe('Accounting')
-    expect(NAV_ITEMS[NAV_ITEMS.length - 2].routeName).toBe(PAYMENT_HOLDS_ROUTE_NAME)
-    expect(listRouteNames(['admin'])).toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
-    expect(listRouteNames(['accountant'])).toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
-    expect(listRouteNames(['registrar'])).not.toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
-    expect(listRouteNames(['cashier'])).not.toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
-    expect(listRouteNames(['teacher'])).not.toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
+  it('ends with the Accounting block after Payment holds', () => {
+    const accountingItems = NAV_ITEMS.slice(-3)
+    expect(accountingItems.map((navItem) => navItem.routeName)).toEqual([
+      CHART_OF_ACCOUNTS_ROUTE_NAME,
+      JOURNAL_ENTRIES_ROUTE_NAME,
+      GENERAL_LEDGER_ROUTE_NAME,
+    ])
+    expect(accountingItems.every((navItem) => navItem.group === 'Accounting')).toBe(true)
+    expect(NAV_ITEMS[NAV_ITEMS.length - 4].routeName).toBe(PAYMENT_HOLDS_ROUTE_NAME)
+  })
+
+  it('shows Journal entries and General ledger to admin and accountant only', () => {
+    for (const routeName of [JOURNAL_ENTRIES_ROUTE_NAME, GENERAL_LEDGER_ROUTE_NAME, CHART_OF_ACCOUNTS_ROUTE_NAME]) {
+      expect(listRouteNames(['admin'])).toContain(routeName)
+      expect(listRouteNames(['accountant'])).toContain(routeName)
+      expect(listRouteNames(['registrar'])).not.toContain(routeName)
+      expect(listRouteNames(['cashier'])).not.toContain(routeName)
+      expect(listRouteNames(['teacher'])).not.toContain(routeName)
+    }
   })
 
   it('shows an accountant-only user Billing reads and the Accounting group', () => {
@@ -89,6 +100,8 @@ describe('listVisibleNavItems', () => {
       ASSESSMENTS_ROUTE_NAME,
       PAYMENTS_ROUTE_NAME,
       CHART_OF_ACCOUNTS_ROUTE_NAME,
+      JOURNAL_ENTRIES_ROUTE_NAME,
+      GENERAL_LEDGER_ROUTE_NAME,
     ])
     expect(buildNavRows(visibleItems).map((navRow) => navRow.key)).toEqual([
       'heading-Billing',
@@ -96,6 +109,8 @@ describe('listVisibleNavItems', () => {
       'Payments',
       'heading-Accounting',
       'ChartOfAccounts',
+      'JournalEntries',
+      'GeneralLedger',
     ])
   })
 })

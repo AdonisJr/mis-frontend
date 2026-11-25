@@ -5,6 +5,7 @@ import AccountFormFields from '@/components/AccountFormFields.vue'
 import Modal from '@/components/modal/Modal.vue'
 import { createAccount, fetchAccount, updateAccount } from '@/services/accountService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
+import { isAccountUsed } from '@/utils/accountDisplay.js'
 import {
   buildAccountPayload,
   buildFormFromAccount,
@@ -41,6 +42,7 @@ const formValues = ref(createEmptyAccountForm())
 const fieldErrors = ref({})
 const isLoading = ref(false)
 const isSaving = ref(false)
+const isKeyLocked = ref(false)
 let loadRequestId = 0
 
 const toast = useToast()
@@ -71,6 +73,7 @@ async function loadAccountForm() {
     const accountResponse = await fetchAccount(props.account.id)
     if (requestId !== loadRequestId) return
     formValues.value = buildFormFromAccount(accountResponse?.account)
+    isKeyLocked.value = isAccountUsed(accountResponse?.account)
   } catch (error) {
     if (requestId !== loadRequestId) return
     applyLoadError(error)
@@ -83,6 +86,7 @@ function resetModal() {
   formValues.value = createEmptyAccountForm()
   fieldErrors.value = {}
   isSaving.value = false
+  isKeyLocked.value = false
   loadAccountForm()
 }
 
@@ -153,6 +157,7 @@ watch(
         :model-value="formValues"
         :field-errors="fieldErrors"
         :is-disabled="isSaving"
+        :is-key-locked="isKeyLocked"
         @update:model-value="updateFormValues"
       />
     </form>

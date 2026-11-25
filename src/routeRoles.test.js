@@ -7,6 +7,11 @@ import {
   CLASS_LIST_ROUTE_NAME,
   CLASS_RECORD_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
+  GENERAL_LEDGER_ROUTE_NAME,
+  JOURNAL_ENTRIES_ROUTE_NAME,
+  JOURNAL_ENTRY_CREATE_ROUTE_NAME,
+  JOURNAL_ENTRY_DETAIL_ROUTE_NAME,
+  JOURNAL_ENTRY_EDIT_ROUTE_NAME,
   MY_CLASSES_ROUTE_NAME,
   NOT_FOUND_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
@@ -35,7 +40,15 @@ const BILLING_READ_ROUTES = [
   STUDENT_LEDGER_ROUTE_NAME,
   PAYMENT_RECEIPT_ROUTE_NAME,
 ]
-const ACCOUNTANT_ROUTES = [ROOT_ROUTE_NAME, NOT_FOUND_ROUTE_NAME, CHART_OF_ACCOUNTS_ROUTE_NAME, ...BILLING_READ_ROUTES]
+const ACCOUNTING_ROUTES = [
+  CHART_OF_ACCOUNTS_ROUTE_NAME,
+  JOURNAL_ENTRIES_ROUTE_NAME,
+  JOURNAL_ENTRY_CREATE_ROUTE_NAME,
+  JOURNAL_ENTRY_DETAIL_ROUTE_NAME,
+  JOURNAL_ENTRY_EDIT_ROUTE_NAME,
+  GENERAL_LEDGER_ROUTE_NAME,
+]
+const ACCOUNTANT_ROUTES = [ROOT_ROUTE_NAME, NOT_FOUND_ROUTE_NAME, ...ACCOUNTING_ROUTES, ...BILLING_READ_ROUTES]
 
 describe('ROUTE_ROLES', () => {
   it('lets every employee role open Root and NotFound', () => {
@@ -77,6 +90,15 @@ describe('ROUTE_ROLES', () => {
 
   it('limits the chart of accounts to admin and accountant', () => {
     expect(ROUTE_ROLES[CHART_OF_ACCOUNTS_ROUTE_NAME]).toEqual(['admin', 'accountant'])
+  })
+
+  it('limits the journal and general ledger routes to admin and accountant', () => {
+    for (const routeName of ACCOUNTING_ROUTES) {
+      expect(ROUTE_ROLES[routeName]).toEqual(['admin', 'accountant'])
+      expect(ROUTE_ROLES[routeName]).not.toContain('registrar')
+      expect(ROUTE_ROLES[routeName]).not.toContain('cashier')
+      expect(ROUTE_ROLES[routeName]).not.toContain('teacher')
+    }
   })
 
   it('gives the five read-only Billing routes to admin, registrar, cashier and accountant', () => {

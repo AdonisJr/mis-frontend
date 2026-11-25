@@ -13,6 +13,7 @@ import {
   getNormalBalanceLabel,
   getSubtypeLabel,
   groupAccountsByType,
+  isAccountUsed,
   isSubtypeFit,
   listSubtypeOptions,
 } from '@/utils/accountDisplay.js'
@@ -108,5 +109,15 @@ describe('dialog messages', () => {
     expect(buildAccountDeactivateMessage(null)).toBe('')
     expect(buildAccountReactivateMessage('x')).toBe('')
     expect(buildAccountDeleteMessage(undefined)).toBe('')
+  })
+})
+
+describe('isAccountUsed', () => {
+  it('is true only for is_used === true', () => {
+    expect(isAccountUsed({ is_used: true })).toBe(true)
+    expect(isAccountUsed({ is_used: false })).toBe(false)
+    expect(isAccountUsed({ is_used: 1 })).toBe(false)
+    expect(isAccountUsed({})).toBe(false)
+    expect(isAccountUsed(null)).toBe(false)
   })
 })
