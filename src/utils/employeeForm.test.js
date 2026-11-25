@@ -33,11 +33,12 @@ const COMPLETE_ADD_FORM = {
 }
 
 describe('EMPLOYEE_ROLE_OPTIONS', () => {
-  it('offers admin, registrar, cashier and teacher with their labels', () => {
+  it('offers admin, registrar, cashier, accountant and teacher with their labels', () => {
     expect(EMPLOYEE_ROLE_OPTIONS).toEqual([
       { value: 'admin', label: 'Admin' },
       { value: 'registrar', label: 'Registrar' },
       { value: 'cashier', label: 'Cashier' },
+      { value: 'accountant', label: 'Accountant' },
       { value: 'teacher', label: 'Teacher' },
     ])
   })
@@ -210,6 +211,12 @@ describe('toggleRole', () => {
     expect(toggleRole(['admin'], 'teacher')).toEqual(['admin', 'teacher'])
     const teacherForm = { ...COMPLETE_ADD_FORM, roles: ['teacher'] }
     expect(findEmployeeFormErrors(teacherForm, true)).not.toHaveProperty('roles')
+  })
+
+  it('adds accountant and accepts an accountant-only form as having a role', () => {
+    expect(toggleRole(['admin'], 'accountant')).toEqual(['admin', 'accountant'])
+    const accountantForm = { ...COMPLETE_ADD_FORM, roles: ['accountant'] }
+    expect(findEmployeeFormErrors(accountantForm, true)).not.toHaveProperty('roles')
   })
 
   it('removes a selected role and ignores an unknown role', () => {

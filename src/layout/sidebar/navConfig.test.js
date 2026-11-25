@@ -1,9 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { NAV_ITEMS, buildNavRows, listVisibleNavItems } from '@/layout/sidebar/navConfig.js'
 import {
+  ASSESSMENTS_ROUTE_NAME,
+  CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
   CURRICULUM_ROUTE_NAME,
   MY_CLASSES_ROUTE_NAME,
+  PAYMENTS_ROUTE_NAME,
+  PAYMENT_HOLDS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
 } from '@/routeNames.js'
@@ -65,5 +69,33 @@ describe('listVisibleNavItems', () => {
   it('returns an empty list for non-array items', () => {
     expect(listVisibleNavItems(null, ['admin'])).toEqual([])
     expect(listVisibleNavItems(undefined, ['admin'])).toEqual([])
+  })
+
+  it('puts Chart of accounts last under Accounting, for admin and accountant only', () => {
+    const lastItem = NAV_ITEMS[NAV_ITEMS.length - 1]
+    expect(lastItem.routeName).toBe(CHART_OF_ACCOUNTS_ROUTE_NAME)
+    expect(lastItem.group).toBe('Accounting')
+    expect(NAV_ITEMS[NAV_ITEMS.length - 2].routeName).toBe(PAYMENT_HOLDS_ROUTE_NAME)
+    expect(listRouteNames(['admin'])).toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
+    expect(listRouteNames(['accountant'])).toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
+    expect(listRouteNames(['registrar'])).not.toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
+    expect(listRouteNames(['cashier'])).not.toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
+    expect(listRouteNames(['teacher'])).not.toContain(CHART_OF_ACCOUNTS_ROUTE_NAME)
+  })
+
+  it('shows an accountant-only user Billing reads and the Accounting group', () => {
+    const visibleItems = listVisibleNavItems(NAV_ITEMS, ['accountant'])
+    expect(visibleItems.map((navItem) => navItem.routeName)).toEqual([
+      ASSESSMENTS_ROUTE_NAME,
+      PAYMENTS_ROUTE_NAME,
+      CHART_OF_ACCOUNTS_ROUTE_NAME,
+    ])
+    expect(buildNavRows(visibleItems).map((navRow) => navRow.key)).toEqual([
+      'heading-Billing',
+      'Assessments',
+      'Payments',
+      'heading-Accounting',
+      'ChartOfAccounts',
+    ])
   })
 })

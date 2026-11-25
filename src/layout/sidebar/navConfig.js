@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LibraryBig,
+  ListTree,
   Presentation,
   Receipt,
   ShieldAlert,
@@ -26,6 +27,7 @@ import {
   ASSESSMENTS_ROUTE_NAME,
   ATTENDANCE_RECORDS_ROUTE_NAME,
   ATTENDANCE_TODAY_ROUTE_NAME,
+  CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
   CURRICULUM_ROUTE_NAME,
   DASHBOARD_ROUTE_NAME,
@@ -54,6 +56,7 @@ const ATTENDANCE_GROUP = 'Attendance'
 const SETUP_GROUP = 'Setup'
 const ACADEMICS_GROUP = 'Academics'
 const BILLING_GROUP = 'Billing'
+const ACCOUNTING_GROUP = 'Accounting'
 
 export const NAV_ROW_HEADING = 'heading'
 export const NAV_ROW_ITEM = 'item'
@@ -81,6 +84,7 @@ export const NAV_ITEMS = [
   { label: 'Assessments', group: BILLING_GROUP, icon: Receipt, routeName: ASSESSMENTS_ROUTE_NAME, roles: ROUTE_ROLES[ASSESSMENTS_ROUTE_NAME] },
   { label: 'Payments', group: BILLING_GROUP, icon: Banknote, routeName: PAYMENTS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENTS_ROUTE_NAME] },
   { label: 'Payment holds', group: BILLING_GROUP, icon: ShieldAlert, routeName: PAYMENT_HOLDS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME] },
+  { label: 'Chart of accounts', group: ACCOUNTING_GROUP, icon: ListTree, routeName: CHART_OF_ACCOUNTS_ROUTE_NAME, roles: ROUTE_ROLES[CHART_OF_ACCOUNTS_ROUTE_NAME] },
 ]
 
 export function listVisibleNavItems(navItems, userRoles) {

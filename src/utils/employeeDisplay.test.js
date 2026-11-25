@@ -63,6 +63,7 @@ describe('getEmployeeRoleLabel', () => {
     expect(getEmployeeRoleLabel('teacher')).toBe('Teacher')
     expect(getEmployeeRoleLabel('admin')).toBe('Admin')
     expect(getEmployeeRoleLabel('cashier')).toBe('Cashier')
+    expect(getEmployeeRoleLabel('accountant')).toBe('Accountant')
     expect(getEmployeeRoleLabel('janitor')).toBe('janitor')
     expect(getEmployeeRoleLabel(null)).toBe('')
   })

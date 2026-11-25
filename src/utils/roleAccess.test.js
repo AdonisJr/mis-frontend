@@ -7,9 +7,9 @@ import {
 } from '@/utils/roleAccess.js'
 
 describe('role lists', () => {
-  it('keeps the staff roles unchanged and adds teacher to the employee roles', () => {
+  it('keeps the staff roles unchanged and adds accountant and teacher to the employee roles', () => {
     expect(STAFF_ROLES).toEqual(['admin', 'registrar', 'cashier'])
-    expect(EMPLOYEE_ROLES).toEqual(['admin', 'registrar', 'cashier', 'teacher'])
+    expect(EMPLOYEE_ROLES).toEqual(['admin', 'registrar', 'cashier', 'accountant', 'teacher'])
   })
 })
 
@@ -24,6 +24,13 @@ describe('findLandingRouteName', () => {
   it('keeps the staff landing when a teacher also holds another role', () => {
     expect(findLandingRouteName(['teacher', 'registrar'])).toBe('Students')
     expect(findLandingRouteName(['teacher', 'admin'])).toBe('Dashboard')
+  })
+
+  it('lands an accountant on the chart of accounts, after cashier and before teacher', () => {
+    expect(findLandingRouteName(['accountant'])).toBe('ChartOfAccounts')
+    expect(findLandingRouteName(['cashier', 'accountant'])).toBe('Payments')
+    expect(findLandingRouteName(['accountant', 'teacher'])).toBe('ChartOfAccounts')
+    expect(findLandingRouteName(['admin', 'accountant'])).toBe('Dashboard')
   })
 
   it('returns null without a known role or a list', () => {
