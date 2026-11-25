@@ -1,20 +1,26 @@
 <script setup>
-import { SUBJECT_TYPE_OPTIONS } from '@/utils/subjectDisplay.js'
+import { computed } from 'vue'
+import { SUBJECT_TYPE_OPTIONS, listWeightGroupOptions } from '@/utils/subjectDisplay.js'
 import {
   SUBJECT_CODE_MAX_LENGTH,
   SUBJECT_DESCRIPTION_MAX_LENGTH,
   SUBJECT_FIELD_LABELS,
   SUBJECT_NAME_MAX_LENGTH,
+  applySubjectFormTypeChange,
 } from '@/utils/subjectForm.js'
 
 const CODE_FIELD = 'code'
 const NAME_FIELD = 'name'
 const TYPE_FIELD = 'type'
+const WEIGHT_GROUP_FIELD = 'weight_group'
 const HOURS_FIELD = 'weekly_hours'
 const DESCRIPTION_FIELD = 'description'
 const FIELD_ID_PREFIX = 'subject-'
 const OPTIONAL_SUFFIX = ' (optional)'
 const SELECT_PLACEHOLDER = 'Select…'
+const CHOOSE_TYPE_FIRST_TEXT = 'Choose a type first'
+const WEIGHT_GROUP_HINT = 'Sets the WW / PT / QA weights.'
+const WEIGHT_GROUP_HINT_ID = 'subject-weight_group-hint'
 const HOURS_HINT = '0.5 to 40, in steps of 0.5.'
 const HOURS_HINT_ID = 'subject-weekly_hours-hint'
 const HOURS_STEP = '0.5'
@@ -33,6 +39,17 @@ const emit = defineEmits(['update:modelValue'])
 
 function updateField(fieldKey, fieldValue) {
   emit('update:modelValue', { ...props.modelValue, [fieldKey]: fieldValue })
+}
+
+function changeType(typeValue) {
+  emit('update:modelValue', applySubjectFormTypeChange(props.modelValue, typeValue))
+}
+
+const weightGroupOptions = computed(() => listWeightGroupOptions(props.modelValue[TYPE_FIELD]))
+
+function getWeightGroupDescribedBy() {
+  if (!getFieldError(WEIGHT_GROUP_FIELD)) return WEIGHT_GROUP_HINT_ID
+  return `${WEIGHT_GROUP_HINT_ID} ${getErrorId(WEIGHT_GROUP_FIELD)}`
 }
 
 function getFieldError(fieldKey) {
@@ -114,7 +131,7 @@ function getHoursDescribedBy() {
         :disabled="isDisabled"
         :aria-invalid="Boolean(getFieldError(TYPE_FIELD))"
         :aria-describedby="getDescribedBy(TYPE_FIELD)"
-        @change="updateField(TYPE_FIELD, $event.target.value)"
+        @change="changeType($event.target.value)"
       >
         <option value="" disabled>{{ SELECT_PLACEHOLDER }}</option>
         <option v-for="typeOption in SUBJECT_TYPE_OPTIONS" :key="typeOption.value" :value="typeOption.value">
@@ -123,6 +140,32 @@ function getHoursDescribedBy() {
       </select>
       <p v-if="getFieldError(TYPE_FIELD)" :id="getErrorId(TYPE_FIELD)" class="mt-1 text-xs text-red-700">
         {{ getFieldError(TYPE_FIELD) }}
+      </p>
+    </div>
+
+    <div>
+      <label :for="getFieldId(WEIGHT_GROUP_FIELD)" class="mb-1 block text-sm font-semibold text-ink">
+        {{ SUBJECT_FIELD_LABELS.weight_group }}
+      </label>
+      <select
+        :id="getFieldId(WEIGHT_GROUP_FIELD)"
+        :value="modelValue[WEIGHT_GROUP_FIELD]"
+        :class="INPUT_CLASS"
+        :disabled="isDisabled || weightGroupOptions.length === 0"
+        :aria-invalid="Boolean(getFieldError(WEIGHT_GROUP_FIELD))"
+        :aria-describedby="getWeightGroupDescribedBy()"
+        @change="updateField(WEIGHT_GROUP_FIELD, $event.target.value)"
+      >
+        <option value="" disabled>
+          {{ weightGroupOptions.length === 0 ? CHOOSE_TYPE_FIRST_TEXT : SELECT_PLACEHOLDER }}
+        </option>
+        <option v-for="weightOption in weightGroupOptions" :key="weightOption.value" :value="weightOption.value">
+          {{ weightOption.label }}
+        </option>
+      </select>
+      <p :id="WEIGHT_GROUP_HINT_ID" class="mt-1 text-xs text-ink-muted">{{ WEIGHT_GROUP_HINT }}</p>
+      <p v-if="getFieldError(WEIGHT_GROUP_FIELD)" :id="getErrorId(WEIGHT_GROUP_FIELD)" class="mt-1 text-xs text-red-700">
+        {{ getFieldError(WEIGHT_GROUP_FIELD) }}
       </p>
     </div>
 

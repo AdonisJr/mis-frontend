@@ -3,11 +3,16 @@ import {
   SUBJECT_COLUMNS,
   SUBJECT_TYPES,
   SUBJECT_TYPE_STAGES,
+  SUBJECT_TYPE_WEIGHT_GROUPS,
+  SUBJECT_WEIGHT_GROUPS,
+  SUBJECT_WEIGHT_GROUP_WEIGHTS,
   buildSubjectDeactivateMessage,
   buildSubjectReactivateMessage,
   formatWeeklyHours,
   getSubjectTypeLabel,
   getSubjectTypeStage,
+  getWeightGroupLabel,
+  listWeightGroupOptions,
   toHalfHourUnits,
 } from '@/utils/subjectDisplay.js'
 
@@ -78,6 +83,46 @@ describe('subject status messages', () => {
 
 describe('SUBJECT_COLUMNS', () => {
   it('lists the column keys in order', () => {
-    expect(SUBJECT_COLUMNS.map((column) => column.key)).toEqual(['code', 'name', 'type', 'weekly_hours', 'is_active'])
+    expect(SUBJECT_COLUMNS.map((column) => column.key)).toEqual([
+      'code',
+      'name',
+      'type',
+      'weight_group',
+      'weekly_hours',
+      'is_active',
+    ])
+  })
+})
+
+describe('weight groups', () => {
+  it('lists the seven groups, their weights and the type fit map exactly', () => {
+    expect(SUBJECT_WEIGHT_GROUPS).toEqual([
+      'jhs_languages_ap_esp',
+      'jhs_science_math',
+      'jhs_mapeh_epp_tle',
+      'shs_core',
+      'shs_academic_other',
+      'shs_academic_immersion_research',
+      'shs_tvl_sports_arts',
+    ])
+    expect(SUBJECT_WEIGHT_GROUP_WEIGHTS.jhs_languages_ap_esp).toEqual({ ww: 30, pt: 50, qa: 20 })
+    expect(SUBJECT_WEIGHT_GROUP_WEIGHTS.jhs_science_math).toEqual({ ww: 40, pt: 40, qa: 20 })
+    expect(SUBJECT_WEIGHT_GROUP_WEIGHTS.shs_academic_other).toEqual({ ww: 25, pt: 45, qa: 30 })
+    expect(SUBJECT_TYPE_WEIGHT_GROUPS.shs_core).toEqual(['shs_core'])
+    expect(SUBJECT_TYPE_WEIGHT_GROUPS.shs_applied).toEqual(SUBJECT_TYPE_WEIGHT_GROUPS.shs_specialized)
+    expect(SUBJECT_TYPE_WEIGHT_GROUPS.jhs_learning_area).toHaveLength(3)
+  })
+
+  it('lists the options of a type with the weights in the label and reads labels back', () => {
+    expect(listWeightGroupOptions('shs_core')).toEqual([{ value: 'shs_core', label: 'SHS Core (25/50/25)' }])
+    expect(listWeightGroupOptions('jhs_learning_area').map((option) => option.value)).toEqual([
+      'jhs_languages_ap_esp',
+      'jhs_science_math',
+      'jhs_mapeh_epp_tle',
+    ])
+    expect(listWeightGroupOptions('college_major')).toEqual([])
+    expect(getWeightGroupLabel('shs_core')).toBe('SHS Core')
+    expect(getWeightGroupLabel('other_group')).toBe('other_group')
+    expect(getWeightGroupLabel(null)).toBe('')
   })
 })

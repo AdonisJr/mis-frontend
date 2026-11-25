@@ -81,6 +81,7 @@ function copyGuardianFields(sourceRow, displayRow) {
 function buildRosterRow(sourceRow, rowIndex) {
   const displayRow = {
     key: sourceRow.enrollment_id,
+    studentId: sourceRow.student_id,
     number: rowIndex + 1,
     name: formatEnrollmentStudentName(sourceRow),
     lrn: sourceRow.lrn || NO_VALUE_LABEL,

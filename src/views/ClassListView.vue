@@ -2,12 +2,12 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
-import { Printer } from '@lucide/vue'
+import { NotebookPen, Printer } from '@lucide/vue'
 import ClassListHeader from '@/components/ClassListHeader.vue'
 import RosterTable from '@/components/RosterTable.vue'
 import { fetchClassRoster } from '@/services/classListService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
-import { MY_CLASSES_ROUTE_NAME } from '@/routeNames.js'
+import { CLASS_RECORD_ROUTE_NAME, MY_CLASSES_ROUTE_NAME } from '@/routeNames.js'
 import { buildClassHeaderItems, buildScheduleSummaryLines, buildSubjectText } from '@/utils/classListDisplay.js'
 import { buildClassPrintHeaderItems } from '@/utils/classListPrint.js'
 import { buildRosterColumns, buildRosterGroups, hasGuardianFields } from '@/utils/rosterDisplay.js'
@@ -17,6 +17,7 @@ const HTTP_NOT_FOUND = 404
 const PAGE_TITLE = 'Class list'
 const TITLE_SEPARATOR = ' · '
 const BACK_LABEL = 'Back to my classes'
+const CLASS_RECORD_LABEL = 'Class record'
 const LOADING_TEXT = 'Loading…'
 const NOT_FOUND_TEXT = 'This class does not exist.'
 const FORBIDDEN_TEXT = 'You cannot open this class list.'
@@ -111,10 +112,19 @@ watch(classId, loadRoster, { immediate: true })
       <RouterLink :to="{ name: MY_CLASSES_ROUTE_NAME, query: route.query }" :class="BACK_LINK_CLASS">
         {{ BACK_LABEL }}
       </RouterLink>
-      <button type="button" :class="SECONDARY_BUTTON_CLASS" @click="printClassList">
-        <Printer :size="16" aria-hidden="true" />
-        Print
-      </button>
+      <div class="flex items-center gap-2">
+        <RouterLink
+          :to="{ name: CLASS_RECORD_ROUTE_NAME, params: { classId }, query: route.query }"
+          :class="SECONDARY_BUTTON_CLASS"
+        >
+          <NotebookPen :size="16" aria-hidden="true" />
+          {{ CLASS_RECORD_LABEL }}
+        </RouterLink>
+        <button type="button" :class="SECONDARY_BUTTON_CLASS" @click="printClassList">
+          <Printer :size="16" aria-hidden="true" />
+          Print
+        </button>
+      </div>
     </div>
 
     <section class="print-page-statement rounded-lg border border-line bg-surface p-4 print:border-0 print:p-0">

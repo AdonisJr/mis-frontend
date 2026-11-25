@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { CalendarArrowRight, CheckCheck, Plus } from '@lucide/vue'
+import { CalendarArrowRight, CheckCheck, FileText, Plus } from '@lucide/vue'
 import DataTable from '@/components/DataTable.vue'
 import TablePagination from '@/components/TablePagination.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
@@ -22,6 +22,7 @@ import { fetchAllSections } from '@/services/sectionService.js'
 import { fetchSchoolYears } from '@/services/schoolYearService.js'
 import { fetchActiveTerm, fetchTerms } from '@/services/termService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
+import { REPORT_CARD_ROUTE_NAME } from '@/routeNames.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
 import { applyPageChange, applySearchChange, isPageBeyondLast, normalizeSearchText } from '@/utils/studentSearch.js'
 import { pickDefaultSchoolYearId } from '@/utils/sectionSearch.js'
@@ -56,6 +57,9 @@ import { buildSectionOptionLabel } from '@/utils/enrollmentForm.js'
 import { formatDisplayDate } from '@/utils/dateDisplay.js'
 
 const ENROLLMENT_ROW_KEY = 'id'
+const REPORT_CARD_LABEL = 'Report card'
+const REPORT_CARD_LINK_CLASS =
+  'inline-flex items-center gap-1.5 rounded-md border border-line bg-surface px-3 py-1.5 text-sm font-semibold hover:bg-page focus-visible:outline-hidden focus-visible:ring-2 ring-accent ring-offset-1'
 const EMPTY_TEXT = 'No enrollments for these filters yet.'
 const NO_MATCH_TEXT = 'No enrollments match the search or filters.'
 const NO_SCHOOL_YEAR_TEXT = 'Add a school year first: enrollments belong to a school year.'
@@ -392,13 +396,27 @@ onBeforeUnmount(cancelPendingSearch)
         <span class="whitespace-nowrap tabular-nums">{{ formatDisplayDate(row.enrolled_at) }}</span>
       </template>
       <template #actions="{ row }">
-        <EnrollmentRowActions
-          :enrollment="row"
-          @move="requestMove(row)"
-          @drop="requestClose(ENROLLMENT_ACTION_DROP, row)"
-          @transfer="requestClose(ENROLLMENT_ACTION_TRANSFER, row)"
-          @complete="requestClose(ENROLLMENT_ACTION_COMPLETE, row)"
-        />
+        <div class="flex justify-end gap-2">
+          <RouterLink
+            :to="{
+              name: REPORT_CARD_ROUTE_NAME,
+              params: { studentId: row.student_id },
+              query: { school_year_id: filters.schoolYearId },
+            }"
+            :aria-label="`Open the report card of ${formatEnrollmentStudentName(row.student)}`"
+            :class="REPORT_CARD_LINK_CLASS"
+          >
+            <FileText :size="16" aria-hidden="true" />
+            {{ REPORT_CARD_LABEL }}
+          </RouterLink>
+          <EnrollmentRowActions
+            :enrollment="row"
+            @move="requestMove(row)"
+            @drop="requestClose(ENROLLMENT_ACTION_DROP, row)"
+            @transfer="requestClose(ENROLLMENT_ACTION_TRANSFER, row)"
+            @complete="requestClose(ENROLLMENT_ACTION_COMPLETE, row)"
+          />
+        </div>
       </template>
     </DataTable>
     <TablePagination

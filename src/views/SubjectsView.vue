@@ -35,6 +35,7 @@ import {
   buildSubjectReactivateMessage,
   formatWeeklyHours,
   getSubjectTypeLabel,
+  getWeightGroupLabel,
 } from '@/utils/subjectDisplay.js'
 import {
   buildFormFromSubject,
@@ -305,6 +306,9 @@ onBeforeUnmount(cancelPendingSearch)
       </template>
       <template #cell-type="{ value }">
         <span class="whitespace-nowrap">{{ getSubjectTypeLabel(value) || NO_VALUE_LABEL }}</span>
+      </template>
+      <template #cell-weight_group="{ value }">
+        <span class="whitespace-nowrap">{{ getWeightGroupLabel(value) || NO_VALUE_LABEL }}</span>
       </template>
       <template #cell-weekly_hours="{ value }">
         <span class="tabular-nums">{{ formatWeeklyHours(value) }}</span>

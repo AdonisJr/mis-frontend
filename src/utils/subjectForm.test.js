@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  applySubjectFormTypeChange,
   buildFormFromSubject,
   buildSubjectPayload,
   createEmptySubjectForm,
@@ -7,26 +8,35 @@ import {
 } from '@/utils/subjectForm.js'
 
 function buildValidForm(overrides = {}) {
-  return { code: 'MATH7', name: 'Mathematics 7', type: 'jhs_learning_area', weekly_hours: '4', description: '', ...overrides }
+  return { code: 'MATH7', name: 'Mathematics 7', type: 'jhs_learning_area', weight_group: 'jhs_science_math', weekly_hours: '4', description: '', ...overrides }
 }
 
 describe('createEmptySubjectForm', () => {
   it('returns blank strings for every field', () => {
-    expect(createEmptySubjectForm()).toEqual({ code: '', name: '', type: '', weekly_hours: '', description: '' })
+    expect(createEmptySubjectForm()).toEqual({
+      code: '',
+      name: '',
+      type: '',
+      weight_group: '',
+      weekly_hours: '',
+      description: '',
+    })
   })
 })
 
 describe('buildFormFromSubject', () => {
   it('maps a row, trimming the hours text, and blanks an unknown type', () => {
-    const subject = { code: 'MATH7', name: 'Mathematics 7', type: 'jhs_learning_area', weekly_hours: '1.50', description: null }
+    const subject = { code: 'MATH7', name: 'Mathematics 7', type: 'jhs_learning_area', weight_group: 'jhs_science_math', weekly_hours: '1.50', description: null }
     expect(buildFormFromSubject(subject)).toEqual({
       code: 'MATH7',
       name: 'Mathematics 7',
       type: 'jhs_learning_area',
+      weight_group: 'jhs_science_math',
       weekly_hours: '1.5',
       description: '',
     })
     expect(buildFormFromSubject({ ...subject, type: 'college_major' }).type).toBe('')
+    expect(buildFormFromSubject({ ...subject, weight_group: 'shs_core' }).weight_group).toBe('')
   })
 
   it('returns the empty form for null', () => {
@@ -106,9 +116,37 @@ describe('buildSubjectPayload', () => {
       code: 'MATH7',
       name: 'Mathematics 7',
       type: 'jhs_learning_area',
+      weight_group: 'jhs_science_math',
       weekly_hours: 2.5,
       description: null,
     })
     expect(Object.hasOwn(subjectPayload, 'is_active')).toBe(false)
+  })
+})
+
+describe('applySubjectFormTypeChange', () => {
+  it('sets the type, clears an unfit weight group and keeps a fit one', () => {
+    const formValues = buildValidForm({ type: 'shs_applied', weight_group: 'shs_tvl_sports_arts' })
+    expect(applySubjectFormTypeChange(formValues, 'shs_specialized')).toMatchObject({
+      type: 'shs_specialized',
+      weight_group: 'shs_tvl_sports_arts',
+    })
+    expect(applySubjectFormTypeChange(formValues, 'shs_core')).toMatchObject({ type: 'shs_core', weight_group: '' })
+    expect(formValues.type).toBe('shs_applied')
+  })
+})
+
+describe('weight group errors', () => {
+  it('requires a weight group', () => {
+    expect(findSubjectFormErrors(buildValidForm({ weight_group: '' })).weight_group).toEqual([
+      'Weight group is required.',
+    ])
+  })
+
+  it('requires a weight group that fits the type', () => {
+    expect(findSubjectFormErrors(buildValidForm({ weight_group: 'shs_core' })).weight_group).toEqual([
+      'Choose a weight group that fits the type.',
+    ])
+    expect(findSubjectFormErrors(buildValidForm({ type: '', weight_group: 'shs_core' })).weight_group).toBeUndefined()
   })
 })

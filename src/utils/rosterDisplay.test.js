@@ -95,7 +95,7 @@ describe('buildRosterGroups numbering', () => {
 describe('buildRosterGroups row display', () => {
   it('(7) formats the row and copies guardian keys only when owned', () => {
     const plainRow = buildRosterGroups({ students: [buildRow({})] }).listedRows[0]
-    expect(plainRow).toMatchObject({ name: 'Cruz, Ana B.', gender: 'Female', lrn: '123456789012' })
+    expect(plainRow).toMatchObject({ studentId: 1, name: 'Cruz, Ana B.', gender: 'Female', lrn: '123456789012' })
     expect(plainRow.statusChip).toMatchObject({ label: 'Enrolled', colorClass: 'bg-green-100 text-green-800' })
     expect(Object.hasOwn(plainRow, 'guardian_name')).toBe(false)
 
