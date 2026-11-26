@@ -10,6 +10,7 @@ import {
   MY_CLASSES_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
   PAYMENT_HOLDS_ROUTE_NAME,
+  POSTING_SETTINGS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
 } from '@/routeNames.js'
@@ -74,14 +75,15 @@ describe('listVisibleNavItems', () => {
   })
 
   it('ends with the Accounting block after Payment holds', () => {
-    const accountingItems = NAV_ITEMS.slice(-3)
+    const accountingItems = NAV_ITEMS.slice(-4)
     expect(accountingItems.map((navItem) => navItem.routeName)).toEqual([
       CHART_OF_ACCOUNTS_ROUTE_NAME,
       JOURNAL_ENTRIES_ROUTE_NAME,
       GENERAL_LEDGER_ROUTE_NAME,
+      POSTING_SETTINGS_ROUTE_NAME,
     ])
     expect(accountingItems.every((navItem) => navItem.group === 'Accounting')).toBe(true)
-    expect(NAV_ITEMS[NAV_ITEMS.length - 4].routeName).toBe(PAYMENT_HOLDS_ROUTE_NAME)
+    expect(NAV_ITEMS[NAV_ITEMS.length - 5].routeName).toBe(PAYMENT_HOLDS_ROUTE_NAME)
   })
 
   it('shows Journal entries and General ledger to admin and accountant only', () => {
@@ -94,6 +96,15 @@ describe('listVisibleNavItems', () => {
     }
   })
 
+  it('shows Posting settings to admin and accountant only', () => {
+    expect(listRouteNames(['admin'])).toContain(POSTING_SETTINGS_ROUTE_NAME)
+    expect(listRouteNames(['accountant'])).toContain(POSTING_SETTINGS_ROUTE_NAME)
+    expect(listRouteNames(['registrar'])).not.toContain(POSTING_SETTINGS_ROUTE_NAME)
+    expect(listRouteNames(['cashier'])).not.toContain(POSTING_SETTINGS_ROUTE_NAME)
+    expect(listRouteNames(['teacher'])).not.toContain(POSTING_SETTINGS_ROUTE_NAME)
+    expect(listRouteNames(['registrar', 'teacher'])).not.toContain(POSTING_SETTINGS_ROUTE_NAME)
+  })
+
   it('shows an accountant-only user Billing reads and the Accounting group', () => {
     const visibleItems = listVisibleNavItems(NAV_ITEMS, ['accountant'])
     expect(visibleItems.map((navItem) => navItem.routeName)).toEqual([
@@ -102,6 +113,7 @@ describe('listVisibleNavItems', () => {
       CHART_OF_ACCOUNTS_ROUTE_NAME,
       JOURNAL_ENTRIES_ROUTE_NAME,
       GENERAL_LEDGER_ROUTE_NAME,
+      POSTING_SETTINGS_ROUTE_NAME,
     ])
     expect(buildNavRows(visibleItems).map((navRow) => navRow.key)).toEqual([
       'heading-Billing',
@@ -111,6 +123,7 @@ describe('listVisibleNavItems', () => {
       'ChartOfAccounts',
       'JournalEntries',
       'GeneralLedger',
+      'PostingSettings',
     ])
   })
 })

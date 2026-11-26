@@ -4,6 +4,7 @@ import { Plus } from '@lucide/vue'
 import { useToast } from 'vue-toastification'
 import DataTable from '@/components/DataTable.vue'
 import JournalEntryFilterBar from '@/components/JournalEntryFilterBar.vue'
+import JournalSourceBadge from '@/components/JournalSourceBadge.vue'
 import TablePagination from '@/components/TablePagination.vue'
 import { JOURNAL_ENTRY_CREATE_ROUTE_NAME, JOURNAL_ENTRY_DETAIL_ROUTE_NAME } from '@/routeNames.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
@@ -20,6 +21,7 @@ import {
   applyJournalAccountChange,
   applyJournalDateFromChange,
   applyJournalDateToChange,
+  applyJournalSourceChange,
   applyJournalStatusChange,
   buildJournalEntryListParams,
   createJournalEntryFilters,
@@ -62,8 +64,8 @@ const toast = useToast()
 
 const dateRangeError = computed(() => findJournalDateRangeError(filters.value))
 const emptyText = computed(() => {
-  const { status, dateFrom, dateTo, accountId, search } = filters.value
-  const isFiltered = [status, dateFrom, dateTo, accountId, search].some((filterValue) => filterValue !== '')
+  const { status, source, dateFrom, dateTo, accountId, search } = filters.value
+  const isFiltered = [status, source, dateFrom, dateTo, accountId, search].some((filterValue) => filterValue !== '')
   return isFiltered ? NO_MATCH_TEXT : EMPTY_TEXT
 })
 
@@ -109,6 +111,11 @@ async function loadAccountOptions() {
 
 function changeStatus(nextStatus) {
   filters.value = applyJournalStatusChange(filters.value, nextStatus)
+  loadJournalEntries()
+}
+
+function changeSource(nextSource) {
+  filters.value = applyJournalSourceChange(filters.value, nextSource)
   loadJournalEntries()
 }
 
@@ -167,6 +174,7 @@ onBeforeUnmount(cancelPendingSearch)
       </div>
       <JournalEntryFilterBar
         :status="filters.status"
+        :source="filters.source"
         :date-from="filters.dateFrom"
         :date-to="filters.dateTo"
         :account-id="filters.accountId"
@@ -174,6 +182,7 @@ onBeforeUnmount(cancelPendingSearch)
         :account-options="accountOptions"
         :date-range-error="dateRangeError"
         @update:status="changeStatus"
+        @update:source="changeSource"
         @update:date-from="changeDateFrom"
         @update:date-to="changeDateTo"
         @update:account-id="changeAccount"
@@ -201,6 +210,9 @@ onBeforeUnmount(cancelPendingSearch)
           <span class="block max-w-80 truncate">{{ row.description }}</span>
         </template>
         <template #cell-reference="{ row }">{{ row.reference ?? NO_VALUE_LABEL }}</template>
+        <template #cell-source="{ row }">
+          <JournalSourceBadge :source="row.source ?? ''" />
+        </template>
         <template #cell-debit_total="{ row }">
           <span class="block text-right tabular-nums">{{ formatPeso(row.debit_total) }}</span>
         </template>

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import DataTable from '@/components/DataTable.vue'
 import JournalEntryTotals from '@/components/JournalEntryTotals.vue'
+import JournalSourceBadge from '@/components/JournalSourceBadge.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
 import JournalEntryReverseModalView from '@/views/JournalEntryReverseModalView.vue'
 import {
@@ -21,10 +22,11 @@ import {
   buildDeleteDraftMessage,
   buildJournalLinks,
   buildServerTotals,
+  buildSourceLinkTarget,
+  canEditJournalDraft,
   canReverseJournalEntry,
   formatJournalNumber,
   getJournalStatusChip,
-  isJournalDraft,
 } from '@/utils/journalEntryDisplay.js'
 import { NO_VALUE_LABEL } from '@/utils/sectionDisplay.js'
 import { toRecordId } from '@/utils/sectionForm.js'
@@ -64,9 +66,10 @@ let entryRequestId = 0
 
 const entryId = computed(() => toRecordId(route.params.entryId))
 const statusChip = computed(() => getJournalStatusChip(journalEntry.value?.display_status))
-const isDraft = computed(() => isJournalDraft(journalEntry.value))
+const canEdit = computed(() => canEditJournalDraft(journalEntry.value))
 const canReverse = computed(() => canReverseJournalEntry(journalEntry.value))
 const journalLinks = computed(() => buildJournalLinks(journalEntry.value))
+const sourceLink = computed(() => buildSourceLinkTarget(journalEntry.value))
 const serverTotals = computed(() => buildServerTotals(journalEntry.value))
 const deleteMessage = computed(() => buildDeleteDraftMessage(journalEntry.value))
 const infoRows = computed(() => {
@@ -171,7 +174,7 @@ watch(entryId, loadEntry, { immediate: true })
     <div class="flex flex-wrap items-center justify-between gap-3">
       <RouterLink :to="{ name: JOURNAL_ENTRIES_ROUTE_NAME }" :class="LINK_CLASS" class="text-sm">{{ BACK_LABEL }}</RouterLink>
       <div class="flex gap-2">
-        <template v-if="isDraft">
+        <template v-if="canEdit">
           <RouterLink
             :to="{ name: JOURNAL_ENTRY_EDIT_ROUTE_NAME, params: { entryId: journalEntry.id } }"
             :class="SECONDARY_BUTTON_CLASS"
@@ -193,6 +196,15 @@ watch(entryId, loadEntry, { immediate: true })
         <div v-for="infoRow in infoRows" :key="infoRow.label">
           <dt class="text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ infoRow.label }}</dt>
           <dd class="text-ink">{{ infoRow.text }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-semibold uppercase tracking-wider text-ink-muted">Source</dt>
+          <dd class="flex flex-wrap items-center gap-2">
+            <JournalSourceBadge :source="journalEntry.source ?? ''" />
+            <RouterLink v-if="sourceLink" :to="sourceLink.to" :class="LINK_CLASS" class="text-sm">
+              {{ sourceLink.label }}
+            </RouterLink>
+          </dd>
         </div>
         <div v-for="journalLink in journalLinks" :key="journalLink.label">
           <dt class="text-xs font-semibold uppercase tracking-wider text-ink-muted">{{ journalLink.label }}</dt>

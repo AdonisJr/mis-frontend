@@ -28,6 +28,7 @@ import {
   PAYMENT_HOLDS_ROUTE_NAME,
   PAYMENT_PLANS_ROUTE_NAME,
   PAYMENT_RECEIPT_ROUTE_NAME,
+  POSTING_SETTINGS_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
@@ -234,6 +235,12 @@ const routes = [
         name: GENERAL_LEDGER_ROUTE_NAME,
         component: () => import('@/views/GeneralLedgerView.vue'),
         meta: { roles: ROUTE_ROLES[GENERAL_LEDGER_ROUTE_NAME], title: 'General ledger' },
+      },
+      {
+        path: 'accounting/posting-settings',
+        name: POSTING_SETTINGS_ROUTE_NAME,
+        component: () => import('@/views/PostingSettingsView.vue'),
+        meta: { roles: ROUTE_ROLES[POSTING_SETTINGS_ROUTE_NAME], title: 'Posting settings' },
       },
       {
         path: 'my-classes',

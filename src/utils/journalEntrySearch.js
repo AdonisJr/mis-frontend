@@ -1,3 +1,8 @@
+import {
+  JOURNAL_SOURCE_ASSESSMENT,
+  JOURNAL_SOURCE_MANUAL,
+  JOURNAL_SOURCE_PAYMENT,
+} from '@/utils/journalEntryDisplay.js'
 import { findDateRangeError } from '@/utils/paymentSearch.js'
 import { toIdText, toRecordId } from '@/utils/sectionForm.js'
 import { FIRST_PAGE, normalizeSearchText } from '@/utils/studentSearch.js'
@@ -12,8 +17,16 @@ export const JOURNAL_STATUS_OPTIONS = Object.freeze(
   ].map((statusOption) => Object.freeze(statusOption)),
 )
 
+export const JOURNAL_SOURCE_OPTIONS = Object.freeze(
+  [
+    { value: JOURNAL_SOURCE_MANUAL, label: 'Manual' },
+    { value: JOURNAL_SOURCE_ASSESSMENT, label: 'Assessment' },
+    { value: JOURNAL_SOURCE_PAYMENT, label: 'Payment' },
+  ].map((sourceOption) => Object.freeze(sourceOption)),
+)
+
 export function createJournalEntryFilters() {
-  return { status: '', dateFrom: '', dateTo: '', accountId: '', search: '', page: FIRST_PAGE }
+  return { status: '', source: '', dateFrom: '', dateTo: '', accountId: '', search: '', page: FIRST_PAGE }
 }
 
 export function findJournalDateRangeError(journalFilters) {
@@ -28,9 +41,11 @@ function isValidPage(pageNumber) {
 function buildOptionalParams(journalFilters) {
   const optionalParams = {}
   const statusFilter = pickOptionValue(JOURNAL_STATUS_OPTIONS, journalFilters.status)
+  const sourceFilter = pickOptionValue(JOURNAL_SOURCE_OPTIONS, journalFilters.source)
   const accountId = toRecordId(journalFilters.accountId)
   const normalizedSearch = normalizeSearchText(journalFilters.search)
   if (statusFilter !== '') optionalParams.status = statusFilter
+  if (sourceFilter !== '') optionalParams.source = sourceFilter
   if (journalFilters.dateFrom) optionalParams.from = journalFilters.dateFrom
   if (journalFilters.dateTo) optionalParams.to = journalFilters.dateTo
   if (accountId !== null) optionalParams.account_id = accountId
@@ -46,6 +61,10 @@ export function buildJournalEntryListParams(journalFilters) {
 
 export function applyJournalStatusChange(journalFilters, nextStatus) {
   return { ...journalFilters, status: String(nextStatus ?? ''), page: FIRST_PAGE }
+}
+
+export function applyJournalSourceChange(journalFilters, nextSource) {
+  return { ...journalFilters, source: String(nextSource ?? ''), page: FIRST_PAGE }
 }
 
 export function applyJournalDateFromChange(journalFilters, nextDate) {
