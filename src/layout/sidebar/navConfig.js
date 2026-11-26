@@ -12,7 +12,9 @@ import {
   DoorOpen,
   GraduationCap,
   HandCoins,
+  Hourglass,
   IdCard,
+  Landmark,
   LayoutDashboard,
   LayoutGrid,
   LibraryBig,
@@ -20,9 +22,11 @@ import {
   ListTree,
   Presentation,
   Receipt,
+  Scale,
   ScrollText,
   Settings2,
   ShieldAlert,
+  TrendingUp,
   Users,
   Wallet,
 } from '@lucide/vue'
@@ -45,6 +49,10 @@ import {
   PAYMENT_HOLDS_ROUTE_NAME,
   PAYMENT_PLANS_ROUTE_NAME,
   POSTING_SETTINGS_ROUTE_NAME,
+  TRIAL_BALANCE_ROUTE_NAME,
+  INCOME_STATEMENT_ROUTE_NAME,
+  BALANCE_SHEET_ROUTE_NAME,
+  AR_AGING_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
@@ -94,6 +102,10 @@ export const NAV_ITEMS = [
   { label: 'Journal entries', group: ACCOUNTING_GROUP, icon: NotebookPen, routeName: JOURNAL_ENTRIES_ROUTE_NAME, roles: ROUTE_ROLES[JOURNAL_ENTRIES_ROUTE_NAME] },
   { label: 'General ledger', group: ACCOUNTING_GROUP, icon: ScrollText, routeName: GENERAL_LEDGER_ROUTE_NAME, roles: ROUTE_ROLES[GENERAL_LEDGER_ROUTE_NAME] },
   { label: 'Posting settings', group: ACCOUNTING_GROUP, icon: Settings2, routeName: POSTING_SETTINGS_ROUTE_NAME, roles: ROUTE_ROLES[POSTING_SETTINGS_ROUTE_NAME] },
+  { label: 'Trial balance', group: ACCOUNTING_GROUP, icon: Scale, routeName: TRIAL_BALANCE_ROUTE_NAME, roles: ROUTE_ROLES[TRIAL_BALANCE_ROUTE_NAME] },
+  { label: 'Income statement', group: ACCOUNTING_GROUP, icon: TrendingUp, routeName: INCOME_STATEMENT_ROUTE_NAME, roles: ROUTE_ROLES[INCOME_STATEMENT_ROUTE_NAME] },
+  { label: 'Balance sheet', group: ACCOUNTING_GROUP, icon: Landmark, routeName: BALANCE_SHEET_ROUTE_NAME, roles: ROUTE_ROLES[BALANCE_SHEET_ROUTE_NAME] },
+  { label: 'AR aging', group: ACCOUNTING_GROUP, icon: Hourglass, routeName: AR_AGING_ROUTE_NAME, roles: ROUTE_ROLES[AR_AGING_ROUTE_NAME] },
 ]
 
 export function listVisibleNavItems(navItems, userRoles) {

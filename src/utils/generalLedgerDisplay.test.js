@@ -9,6 +9,7 @@ import {
   formatLedgerAmount,
   formatLedgerCell,
   hasLedgerLines,
+  readLedgerQuery,
 } from '@/utils/generalLedgerDisplay.js'
 
 const LEDGER = {
@@ -120,5 +121,27 @@ describe('summary', () => {
     ])
     expect(hasLedgerLines(LEDGER)).toBe(true)
     expect(hasLedgerLines({ lines: [] })).toBe(false)
+  })
+})
+
+describe('readLedgerQuery', () => {
+  it('reads the account and range from a full query', () => {
+    const routeQuery = { account_id: '4', from: '2026-02-01', to: '2026-03-31' }
+    expect(readLedgerQuery(routeQuery, '2026-11-26')).toEqual({ accountId: '4', from: '2026-02-01', to: '2026-03-31' })
+  })
+
+  it('falls back to the year-to-date defaults when the query is missing', () => {
+    expect(readLedgerQuery({}, '2026-11-26')).toEqual({ accountId: '', from: '2026-01-01', to: '2026-11-26' })
+  })
+
+  it('falls back to the defaults for a malformed or reversed range', () => {
+    const malformedQuery = { account_id: '4', from: '2026-13-99', to: '2026-03-31' }
+    const reversedQuery = { account_id: '4', from: '2026-05-02', to: '2026-05-01' }
+    expect(readLedgerQuery(malformedQuery, '2026-11-26')).toEqual({ accountId: '4', from: '2026-01-01', to: '2026-11-26' })
+    expect(readLedgerQuery(reversedQuery, '2026-11-26')).toEqual({ accountId: '4', from: '2026-01-01', to: '2026-11-26' })
+  })
+
+  it('gives an empty account for a bad account id', () => {
+    expect(readLedgerQuery({ account_id: 'abc', from: '2026-02-01', to: '2026-03-31' }, '2026-11-26').accountId).toBe('')
   })
 })

@@ -13,7 +13,18 @@ import {
   POSTING_SETTINGS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
+  AR_AGING_ROUTE_NAME,
+  BALANCE_SHEET_ROUTE_NAME,
+  INCOME_STATEMENT_ROUTE_NAME,
+  TRIAL_BALANCE_ROUTE_NAME,
 } from '@/routeNames.js'
+
+const REPORT_ROUTE_NAMES = [
+  TRIAL_BALANCE_ROUTE_NAME,
+  INCOME_STATEMENT_ROUTE_NAME,
+  BALANCE_SHEET_ROUTE_NAME,
+  AR_AGING_ROUTE_NAME,
+]
 
 function listRouteNames(userRoles) {
   return listVisibleNavItems(NAV_ITEMS, userRoles).map((navItem) => navItem.routeName)
@@ -75,15 +86,19 @@ describe('listVisibleNavItems', () => {
   })
 
   it('ends with the Accounting block after Payment holds', () => {
-    const accountingItems = NAV_ITEMS.slice(-4)
+    const accountingItems = NAV_ITEMS.slice(-8)
     expect(accountingItems.map((navItem) => navItem.routeName)).toEqual([
       CHART_OF_ACCOUNTS_ROUTE_NAME,
       JOURNAL_ENTRIES_ROUTE_NAME,
       GENERAL_LEDGER_ROUTE_NAME,
       POSTING_SETTINGS_ROUTE_NAME,
+      TRIAL_BALANCE_ROUTE_NAME,
+      INCOME_STATEMENT_ROUTE_NAME,
+      BALANCE_SHEET_ROUTE_NAME,
+      AR_AGING_ROUTE_NAME,
     ])
     expect(accountingItems.every((navItem) => navItem.group === 'Accounting')).toBe(true)
-    expect(NAV_ITEMS[NAV_ITEMS.length - 5].routeName).toBe(PAYMENT_HOLDS_ROUTE_NAME)
+    expect(NAV_ITEMS[NAV_ITEMS.length - 9].routeName).toBe(PAYMENT_HOLDS_ROUTE_NAME)
   })
 
   it('shows Journal entries and General ledger to admin and accountant only', () => {
@@ -105,6 +120,17 @@ describe('listVisibleNavItems', () => {
     expect(listRouteNames(['registrar', 'teacher'])).not.toContain(POSTING_SETTINGS_ROUTE_NAME)
   })
 
+  it('shows the four report items to admin and accountant only', () => {
+    for (const routeName of REPORT_ROUTE_NAMES) {
+      expect(listRouteNames(['admin'])).toContain(routeName)
+      expect(listRouteNames(['accountant'])).toContain(routeName)
+      expect(listRouteNames(['registrar'])).not.toContain(routeName)
+      expect(listRouteNames(['cashier'])).not.toContain(routeName)
+      expect(listRouteNames(['teacher'])).not.toContain(routeName)
+      expect(listRouteNames(['registrar', 'teacher'])).not.toContain(routeName)
+    }
+  })
+
   it('shows an accountant-only user Billing reads and the Accounting group', () => {
     const visibleItems = listVisibleNavItems(NAV_ITEMS, ['accountant'])
     expect(visibleItems.map((navItem) => navItem.routeName)).toEqual([
@@ -114,6 +140,10 @@ describe('listVisibleNavItems', () => {
       JOURNAL_ENTRIES_ROUTE_NAME,
       GENERAL_LEDGER_ROUTE_NAME,
       POSTING_SETTINGS_ROUTE_NAME,
+      TRIAL_BALANCE_ROUTE_NAME,
+      INCOME_STATEMENT_ROUTE_NAME,
+      BALANCE_SHEET_ROUTE_NAME,
+      AR_AGING_ROUTE_NAME,
     ])
     expect(buildNavRows(visibleItems).map((navRow) => navRow.key)).toEqual([
       'heading-Billing',
@@ -124,6 +154,10 @@ describe('listVisibleNavItems', () => {
       'JournalEntries',
       'GeneralLedger',
       'PostingSettings',
+      'TrialBalance',
+      'IncomeStatement',
+      'BalanceSheet',
+      'ArAging',
     ])
   })
 })

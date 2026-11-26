@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { useToast } from 'vue-toastification'
 import DataTable from '@/components/DataTable.vue'
 import GeneralLedgerFilterBar from '@/components/GeneralLedgerFilterBar.vue'
@@ -19,6 +20,7 @@ import {
   createLedgerFilters,
   findLedgerRangeError,
   hasLedgerLines,
+  readLedgerQuery,
 } from '@/utils/generalLedgerDisplay.js'
 import { formatAccountLabel, listAccountOptions } from '@/utils/journalEntryDisplay.js'
 import { NO_VALUE_LABEL } from '@/utils/sectionDisplay.js'
@@ -38,6 +40,7 @@ const isLoading = ref(false)
 let ledgerRequestId = 0
 
 const toast = useToast()
+const route = useRoute()
 
 const rangeError = computed(() => findLedgerRangeError(filters.value))
 const hasAccount = computed(() => filters.value.accountId !== '')
@@ -99,7 +102,16 @@ function changeTo(nextDate) {
   loadLedger()
 }
 
-onMounted(loadAccountOptions)
+async function applyRouteQuery() {
+  await loadAccountOptions()
+  // a choice the user made while the options loaded wins over the link
+  const isLinkApplicable = route.query.account_id !== undefined && filters.value.accountId === ''
+  if (!isLinkApplicable) return
+  filters.value = readLedgerQuery(route.query, toIsoDate(new Date()))
+  if (filters.value.accountId !== '') loadLedger()
+}
+
+onMounted(applyRouteQuery)
 </script>
 
 <template>
