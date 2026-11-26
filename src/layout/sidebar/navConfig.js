@@ -16,9 +16,11 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LibraryBig,
+  NotebookPen,
   ListTree,
   Presentation,
   Receipt,
+  ScrollText,
   ShieldAlert,
   Users,
   Wallet,
@@ -35,6 +37,8 @@ import {
   EMPLOYEES_ROUTE_NAME,
   ENROLLMENT_ROUTE_NAME,
   FEE_SCHEDULES_ROUTE_NAME,
+  GENERAL_LEDGER_ROUTE_NAME,
+  JOURNAL_ENTRIES_ROUTE_NAME,
   MY_CLASSES_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
   PAYMENT_HOLDS_ROUTE_NAME,
@@ -85,6 +89,8 @@ export const NAV_ITEMS = [
   { label: 'Payments', group: BILLING_GROUP, icon: Banknote, routeName: PAYMENTS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENTS_ROUTE_NAME] },
   { label: 'Payment holds', group: BILLING_GROUP, icon: ShieldAlert, routeName: PAYMENT_HOLDS_ROUTE_NAME, roles: ROUTE_ROLES[PAYMENT_HOLDS_ROUTE_NAME] },
   { label: 'Chart of accounts', group: ACCOUNTING_GROUP, icon: ListTree, routeName: CHART_OF_ACCOUNTS_ROUTE_NAME, roles: ROUTE_ROLES[CHART_OF_ACCOUNTS_ROUTE_NAME] },
+  { label: 'Journal entries', group: ACCOUNTING_GROUP, icon: NotebookPen, routeName: JOURNAL_ENTRIES_ROUTE_NAME, roles: ROUTE_ROLES[JOURNAL_ENTRIES_ROUTE_NAME] },
+  { label: 'General ledger', group: ACCOUNTING_GROUP, icon: ScrollText, routeName: GENERAL_LEDGER_ROUTE_NAME, roles: ROUTE_ROLES[GENERAL_LEDGER_ROUTE_NAME] },
 ]
 
 export function listVisibleNavItems(navItems, userRoles) {
