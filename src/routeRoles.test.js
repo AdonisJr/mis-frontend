@@ -17,6 +17,10 @@ import {
   PAYMENTS_ROUTE_NAME,
   PAYMENT_RECEIPT_ROUTE_NAME,
   POSTING_SETTINGS_ROUTE_NAME,
+  TRIAL_BALANCE_ROUTE_NAME,
+  INCOME_STATEMENT_ROUTE_NAME,
+  BALANCE_SHEET_ROUTE_NAME,
+  AR_AGING_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   REPORT_CARD_ROUTE_NAME,
   ROOT_ROUTE_NAME,
@@ -49,6 +53,16 @@ const ACCOUNTING_ROUTES = [
   JOURNAL_ENTRY_EDIT_ROUTE_NAME,
   GENERAL_LEDGER_ROUTE_NAME,
   POSTING_SETTINGS_ROUTE_NAME,
+  TRIAL_BALANCE_ROUTE_NAME,
+  INCOME_STATEMENT_ROUTE_NAME,
+  BALANCE_SHEET_ROUTE_NAME,
+  AR_AGING_ROUTE_NAME,
+]
+const REPORT_ROUTES = [
+  TRIAL_BALANCE_ROUTE_NAME,
+  INCOME_STATEMENT_ROUTE_NAME,
+  BALANCE_SHEET_ROUTE_NAME,
+  AR_AGING_ROUTE_NAME,
 ]
 const ACCOUNTANT_ROUTES = [ROOT_ROUTE_NAME, NOT_FOUND_ROUTE_NAME, ...ACCOUNTING_ROUTES, ...BILLING_READ_ROUTES]
 
@@ -103,6 +117,15 @@ describe('ROUTE_ROLES', () => {
 
   it('limits the journal and general ledger routes to admin and accountant', () => {
     for (const routeName of ACCOUNTING_ROUTES) {
+      expect(ROUTE_ROLES[routeName]).toEqual(['admin', 'accountant'])
+      expect(ROUTE_ROLES[routeName]).not.toContain('registrar')
+      expect(ROUTE_ROLES[routeName]).not.toContain('cashier')
+      expect(ROUTE_ROLES[routeName]).not.toContain('teacher')
+    }
+  })
+
+  it('limits the four report routes to admin and accountant', () => {
+    for (const routeName of REPORT_ROUTES) {
       expect(ROUTE_ROLES[routeName]).toEqual(['admin', 'accountant'])
       expect(ROUTE_ROLES[routeName]).not.toContain('registrar')
       expect(ROUTE_ROLES[routeName]).not.toContain('cashier')

@@ -20,6 +20,7 @@ export const OPENING_ROW_TEXT = 'Opening balance'
 const NEGATIVE_PREFIX = '-'
 const YEAR_LENGTH = 4
 const YEAR_START_SUFFIX = '-01-01'
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 function isRecordObject(record) {
   return record !== null && typeof record === 'object'
@@ -31,6 +32,22 @@ export function buildYearStartIso(todayIso) {
 
 export function createLedgerFilters(todayIso) {
   return { accountId: '', from: buildYearStartIso(todayIso), to: todayIso }
+}
+
+function isCalendarDate(dateText) {
+  if (typeof dateText !== 'string' || !ISO_DATE_PATTERN.test(dateText)) return false
+  const parsedDate = new Date(`${dateText}T00:00:00Z`)
+  return !Number.isNaN(parsedDate.getTime()) && parsedDate.toISOString().startsWith(dateText)
+}
+
+export function readLedgerQuery(routeQuery, todayIso) {
+  const defaultFilters = createLedgerFilters(todayIso)
+  const accountId = toIdText(routeQuery?.account_id)
+  const queryRange = { from: routeQuery?.from, to: routeQuery?.to }
+  const isRangeUsable =
+    isCalendarDate(queryRange.from) && isCalendarDate(queryRange.to) && findLedgerRangeError(queryRange) === ''
+  if (!isRangeUsable) return { accountId, from: defaultFilters.from, to: defaultFilters.to }
+  return { accountId, from: queryRange.from, to: queryRange.to }
 }
 
 export function findLedgerRangeError(ledgerFilters) {
