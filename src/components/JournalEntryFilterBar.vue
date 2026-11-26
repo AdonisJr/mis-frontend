@@ -1,9 +1,11 @@
 <script setup>
-import { JOURNAL_STATUS_OPTIONS } from '@/utils/journalEntrySearch.js'
+import { JOURNAL_SOURCE_OPTIONS, JOURNAL_STATUS_OPTIONS } from '@/utils/journalEntrySearch.js'
 import { TEXT_MAX_LENGTH } from '@/utils/studentForm.js'
 
 const STATUS_LABEL = 'Status'
 const ALL_STATUSES_LABEL = 'All statuses'
+const SOURCE_LABEL = 'Source'
+const ALL_SOURCES_LABEL = 'All sources'
 const FROM_LABEL = 'From'
 const TO_LABEL = 'To'
 const ACCOUNT_LABEL = 'Account'
@@ -11,6 +13,7 @@ const ALL_ACCOUNTS_LABEL = 'All accounts'
 const SEARCH_LABEL = 'Search'
 const SEARCH_PLACEHOLDER = 'JV no., description or reference'
 const STATUS_ID = 'journal-status-filter'
+const SOURCE_ID = 'journal-source-filter'
 const DATE_FROM_ID = 'journal-date-from'
 const DATE_TO_ID = 'journal-date-to'
 const ACCOUNT_ID = 'journal-account-filter'
@@ -22,6 +25,7 @@ const INPUT_CLASS =
 
 defineProps({
   status: { type: String, required: true },
+  source: { type: String, required: true },
   dateFrom: { type: String, required: true },
   dateTo: { type: String, required: true },
   accountId: { type: String, required: true },
@@ -31,7 +35,7 @@ defineProps({
   isDisabled: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:status', 'update:dateFrom', 'update:dateTo', 'update:accountId', 'update:search'])
+const emit = defineEmits(['update:status', 'update:source', 'update:dateFrom', 'update:dateTo', 'update:accountId', 'update:search'])
 </script>
 
 <template>
@@ -49,6 +53,21 @@ const emit = defineEmits(['update:status', 'update:dateFrom', 'update:dateTo', '
           <option value="">{{ ALL_STATUSES_LABEL }}</option>
           <option v-for="statusOption in JOURNAL_STATUS_OPTIONS" :key="statusOption.value" :value="statusOption.value">
             {{ statusOption.label }}
+          </option>
+        </select>
+      </div>
+      <div class="sm:w-40">
+        <label :for="SOURCE_ID" :class="LABEL_CLASS">{{ SOURCE_LABEL }}</label>
+        <select
+          :id="SOURCE_ID"
+          :value="source"
+          :class="INPUT_CLASS"
+          :disabled="isDisabled"
+          @change="emit('update:source', $event.target.value)"
+        >
+          <option value="">{{ ALL_SOURCES_LABEL }}</option>
+          <option v-for="sourceOption in JOURNAL_SOURCE_OPTIONS" :key="sourceOption.value" :value="sourceOption.value">
+            {{ sourceOption.label }}
           </option>
         </select>
       </div>

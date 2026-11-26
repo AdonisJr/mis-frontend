@@ -3,6 +3,7 @@ import {
   applyJournalAccountChange,
   applyJournalDateFromChange,
   applyJournalDateToChange,
+  applyJournalSourceChange,
   applyJournalStatusChange,
   buildJournalEntryListParams,
   createJournalEntryFilters,
@@ -13,6 +14,7 @@ describe('createJournalEntryFilters', () => {
   it('starts blank on page 1', () => {
     expect(createJournalEntryFilters()).toEqual({
       status: '',
+      source: '',
       dateFrom: '',
       dateTo: '',
       accountId: '',
@@ -64,6 +66,16 @@ describe('buildJournalEntryListParams', () => {
     expect(buildJournalEntryListParams(backwardsFilters)).toBeNull()
     const sameDayFilters = { ...createJournalEntryFilters(), dateFrom: '2026-01-01', dateTo: '2026-01-01' }
     expect(buildJournalEntryListParams(sameDayFilters)).toEqual({ page: 1, from: '2026-01-01', to: '2026-01-01' })
+  })
+})
+
+describe('source filter', () => {
+  it('sends a known source, drops an unknown one and resets the page on change', () => {
+    const journalFilters = { ...createJournalEntryFilters(), page: 4 }
+    expect(buildJournalEntryListParams({ ...journalFilters, source: 'payment' })).toEqual({ page: 4, source: 'payment' })
+    expect(buildJournalEntryListParams({ ...journalFilters, source: 'refund' })).toEqual({ page: 4 })
+    expect(applyJournalSourceChange(journalFilters, 'assessment')).toMatchObject({ source: 'assessment', page: 1 })
+    expect(applyJournalSourceChange(journalFilters, null)).toMatchObject({ source: '', page: 1 })
   })
 })
 

@@ -21,6 +21,7 @@ import {
   Presentation,
   Receipt,
   ScrollText,
+  Settings2,
   ShieldAlert,
   Users,
   Wallet,
@@ -43,6 +44,7 @@ import {
   PAYMENTS_ROUTE_NAME,
   PAYMENT_HOLDS_ROUTE_NAME,
   PAYMENT_PLANS_ROUTE_NAME,
+  POSTING_SETTINGS_ROUTE_NAME,
   PROGRAMS_ROUTE_NAME,
   RFID_CARDS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
@@ -91,6 +93,7 @@ export const NAV_ITEMS = [
   { label: 'Chart of accounts', group: ACCOUNTING_GROUP, icon: ListTree, routeName: CHART_OF_ACCOUNTS_ROUTE_NAME, roles: ROUTE_ROLES[CHART_OF_ACCOUNTS_ROUTE_NAME] },
   { label: 'Journal entries', group: ACCOUNTING_GROUP, icon: NotebookPen, routeName: JOURNAL_ENTRIES_ROUTE_NAME, roles: ROUTE_ROLES[JOURNAL_ENTRIES_ROUTE_NAME] },
   { label: 'General ledger', group: ACCOUNTING_GROUP, icon: ScrollText, routeName: GENERAL_LEDGER_ROUTE_NAME, roles: ROUTE_ROLES[GENERAL_LEDGER_ROUTE_NAME] },
+  { label: 'Posting settings', group: ACCOUNTING_GROUP, icon: Settings2, routeName: POSTING_SETTINGS_ROUTE_NAME, roles: ROUTE_ROLES[POSTING_SETTINGS_ROUTE_NAME] },
 ]
 
 export function listVisibleNavItems(navItems, userRoles) {

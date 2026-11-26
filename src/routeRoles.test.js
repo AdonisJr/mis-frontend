@@ -16,6 +16,7 @@ import {
   NOT_FOUND_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
   PAYMENT_RECEIPT_ROUTE_NAME,
+  POSTING_SETTINGS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   REPORT_CARD_ROUTE_NAME,
   ROOT_ROUTE_NAME,
@@ -47,6 +48,7 @@ const ACCOUNTING_ROUTES = [
   JOURNAL_ENTRY_DETAIL_ROUTE_NAME,
   JOURNAL_ENTRY_EDIT_ROUTE_NAME,
   GENERAL_LEDGER_ROUTE_NAME,
+  POSTING_SETTINGS_ROUTE_NAME,
 ]
 const ACCOUNTANT_ROUTES = [ROOT_ROUTE_NAME, NOT_FOUND_ROUTE_NAME, ...ACCOUNTING_ROUTES, ...BILLING_READ_ROUTES]
 
@@ -90,6 +92,13 @@ describe('ROUTE_ROLES', () => {
 
   it('limits the chart of accounts to admin and accountant', () => {
     expect(ROUTE_ROLES[CHART_OF_ACCOUNTS_ROUTE_NAME]).toEqual(['admin', 'accountant'])
+  })
+
+  it('limits Posting settings to admin and accountant', () => {
+    expect(ROUTE_ROLES[POSTING_SETTINGS_ROUTE_NAME]).toEqual(['admin', 'accountant'])
+    expect(ROUTE_ROLES[POSTING_SETTINGS_ROUTE_NAME]).not.toContain('registrar')
+    expect(ROUTE_ROLES[POSTING_SETTINGS_ROUTE_NAME]).not.toContain('cashier')
+    expect(ROUTE_ROLES[POSTING_SETTINGS_ROUTE_NAME]).not.toContain('teacher')
   })
 
   it('limits the journal and general ledger routes to admin and accountant', () => {

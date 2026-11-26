@@ -6,10 +6,14 @@ import {
   buildJournalLinks,
   buildPostConfirmMessage,
   buildServerTotals,
+  buildSourceLinkTarget,
+  canEditJournalDraft,
   canReverseJournalEntry,
   formatAccountLabel,
   formatJournalNumber,
+  getJournalSourceChip,
   getJournalStatusChip,
+  isBillingEntry,
   isJournalDraft,
   listAccountOptions,
 } from '@/utils/journalEntryDisplay.js'
@@ -41,6 +45,47 @@ describe('entry flags', () => {
     expect(canReverseJournalEntry({ can_reverse: true })).toBe(true)
     expect(canReverseJournalEntry({ can_reverse: 'yes' })).toBe(false)
     expect(canReverseJournalEntry(null)).toBe(false)
+  })
+})
+
+describe('getJournalSourceChip', () => {
+  it('maps the three sources and drops unknown or null ones', () => {
+    expect(getJournalSourceChip('manual')).toEqual({ label: 'Manual', colorClass: 'bg-slate-200 text-slate-700' })
+    expect(getJournalSourceChip('assessment')).toEqual({ label: 'Assessment', colorClass: 'bg-accent-soft text-accent' })
+    expect(getJournalSourceChip('payment')).toEqual({ label: 'Payment', colorClass: 'bg-accent-soft text-accent' })
+    expect(getJournalSourceChip('refund')).toBeNull()
+    expect(getJournalSourceChip('toString')).toBeNull()
+    expect(getJournalSourceChip(null)).toBeNull()
+  })
+})
+
+describe('billing entry guards', () => {
+  it('hides edit and reverse for billing entries even when the server allows them', () => {
+    const billingDraft = { source: 'payment', status: 'draft', can_reverse: true }
+    expect(isBillingEntry({ source: 'assessment' })).toBe(true)
+    expect(isBillingEntry(billingDraft)).toBe(true)
+    expect(isBillingEntry({ source: 'manual' })).toBe(false)
+    expect(isBillingEntry({})).toBe(false)
+    expect(canEditJournalDraft(billingDraft)).toBe(false)
+    expect(canReverseJournalEntry(billingDraft)).toBe(false)
+    expect(canEditJournalDraft({ source: 'manual', status: 'draft' })).toBe(true)
+    expect(canReverseJournalEntry({ source: 'manual', can_reverse: true })).toBe(true)
+  })
+})
+
+describe('buildSourceLinkTarget', () => {
+  it('targets the statement of account or the receipt and drops missing or unknown links', () => {
+    expect(buildSourceLinkTarget({ source: 'assessment', source_link: { type: 'assessment', id: 12 } })).toEqual({
+      label: 'Open statement of account',
+      to: { name: 'StatementOfAccount', params: { assessmentId: 12 } },
+    })
+    expect(buildSourceLinkTarget({ source: 'payment', source_link: { type: 'payment', id: 30 } })).toEqual({
+      label: 'Open receipt',
+      to: { name: 'PaymentReceipt', params: { paymentId: 30 } },
+    })
+    expect(buildSourceLinkTarget({ source: 'payment', source_link: null })).toBeNull()
+    expect(buildSourceLinkTarget({ source: 'manual' })).toBeNull()
+    expect(buildSourceLinkTarget({ source_link: { type: 'refund', id: 1 } })).toBeNull()
   })
 })
 
@@ -89,6 +134,7 @@ describe('columns', () => {
       'entry_date',
       'description',
       'reference',
+      'source',
       'debit_total',
       'display_status',
     ])
