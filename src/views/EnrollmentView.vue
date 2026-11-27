@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useToast } from 'vue-toastification'
-import { CalendarArrowRight, CheckCheck, FileText, Plus } from '@lucide/vue'
+import { CalendarArrowRight, CheckCheck, FileText, KeyRound, Plus } from '@lucide/vue'
 import DataTable from '@/components/DataTable.vue'
 import TablePagination from '@/components/TablePagination.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
@@ -11,6 +11,7 @@ import EnrollmentEnrollModalView from '@/views/EnrollmentEnrollModalView.vue'
 import EnrollmentMoveModalView from '@/views/EnrollmentMoveModalView.vue'
 import EnrollmentRolloverModalView from '@/views/EnrollmentRolloverModalView.vue'
 import EnrollmentCompleteModalView from '@/views/EnrollmentCompleteModalView.vue'
+import EnrollmentMobileAccountsModalView from '@/views/EnrollmentMobileAccountsModalView.vue'
 import {
   completeEnrollment,
   dropEnrollment,
@@ -24,6 +25,8 @@ import { fetchActiveTerm, fetchTerms } from '@/services/termService.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import { REPORT_CARD_ROUTE_NAME } from '@/routeNames.js'
 import { useSchoolYearStore } from '@/stores/schoolYearStore.js'
+import { useAuthStore } from '@/stores/authStore.js'
+import { ADMIN_REGISTRAR_ROLES } from '@/routeRoles.js'
 import { applyPageChange, applySearchChange, isPageBeyondLast, normalizeSearchText } from '@/utils/studentSearch.js'
 import { pickDefaultSchoolYearId } from '@/utils/sectionSearch.js'
 import { toRecordId } from '@/utils/sectionForm.js'
@@ -53,7 +56,8 @@ import {
   buildClosingConfirm,
   getEnrollmentStatusChip,
 } from '@/utils/enrollmentStatus.js'
-import { buildSectionOptionLabel } from '@/utils/enrollmentForm.js'
+import { buildSectionOptionLabel, findSection } from '@/utils/enrollmentForm.js'
+import { getGenerateAvailability } from '@/utils/mobileAccountDisplay.js'
 import { formatDisplayDate } from '@/utils/dateDisplay.js'
 
 const ENROLLMENT_ROW_KEY = 'id'
@@ -108,6 +112,7 @@ const isEnrollOpen = ref(false)
 const isRolloverOpen = ref(false)
 const isCompleteOpen = ref(false)
 const movingEnrollment = ref(null)
+const generatingSection = ref(null)
 const closingRequest = ref(null)
 const isClosing = ref(false)
 let listRequestId = 0
@@ -117,9 +122,18 @@ let hasInitStarted = false
 
 const toast = useToast()
 const schoolYearStore = useSchoolYearStore()
+const authStore = useAuthStore()
 
 const hasSchoolYears = computed(() => schoolYears.value.length > 0)
 const canEnroll = computed(() => isFilterReady.value && filters.value.schoolYearId !== '')
+const canGenerateMobileAccounts = computed(() => authStore.hasAnyRole(ADMIN_REGISTRAR_ROLES))
+const selectedFilterSection = computed(() => findSection(filterSections.value, filters.value.sectionId))
+const selectedSchoolYearName = computed(
+  () => schoolYears.value.find((schoolYear) => schoolYear.id === toRecordId(filters.value.schoolYearId))?.name ?? '',
+)
+const generateAvailability = computed(() =>
+  getGenerateAvailability(selectedFilterSection.value, schoolYearStore.activeSchoolYear?.id ?? null),
+)
 const isClosingConfirmOpen = computed(() => closingRequest.value !== null)
 const closingConfirm = computed(() => {
   if (closingRequest.value === null) return null
@@ -270,6 +284,11 @@ function openEnroll() {
   isEnrollOpen.value = true
 }
 
+function openGenerateMobileAccounts() {
+  if (selectedFilterSection.value === null) return
+  generatingSection.value = selectedFilterSection.value
+}
+
 function openRollover() {
   if (!canEnroll.value) return
   isRolloverOpen.value = true
@@ -330,6 +349,17 @@ onBeforeUnmount(cancelPendingSearch)
     <div class="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
       <h2 class="text-sm font-bold text-ink">Enrollments</h2>
       <div class="flex flex-wrap justify-end gap-2">
+        <button
+          v-if="canGenerateMobileAccounts"
+          type="button"
+          :class="SECONDARY_BUTTON_CLASS"
+          :disabled="!canEnroll || !generateAvailability.isEnabled"
+          :title="generateAvailability.hint"
+          @click="openGenerateMobileAccounts"
+        >
+          <KeyRound :size="16" aria-hidden="true" />
+          Mobile accounts
+        </button>
         <button type="button" :class="SECONDARY_BUTTON_CLASS" :disabled="!canEnroll" @click="openRollover">
           <CalendarArrowRight :size="16" aria-hidden="true" />
           Roll over
@@ -476,5 +506,11 @@ onBeforeUnmount(cancelPendingSearch)
     :is-loading="isClosing"
     @confirm="confirmClose"
     @cancel="cancelClose"
+  />
+
+  <EnrollmentMobileAccountsModalView
+    :section="generatingSection"
+    :school-year-name="selectedSchoolYearName"
+    @close="generatingSection = null"
   />
 </template>

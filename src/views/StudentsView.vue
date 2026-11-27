@@ -1,15 +1,18 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useToast } from 'vue-toastification'
-import { Pencil, Plus, Trash2 } from '@lucide/vue'
+import { Pencil, Plus, Smartphone, Trash2 } from '@lucide/vue'
 import DataTable from '@/components/DataTable.vue'
 import Modal from '@/components/modal/Modal.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
 import StudentFilterBar from '@/components/StudentFilterBar.vue'
 import StudentFormFields from '@/components/StudentFormFields.vue'
 import TablePagination from '@/components/TablePagination.vue'
+import StudentMobileAccountModalView from '@/views/StudentMobileAccountModalView.vue'
 import { createStudent, deleteStudent, fetchStudents, updateStudent } from '@/services/studentService.js'
 import { fetchGradeLevels } from '@/services/gradeLevelService.js'
+import { useAuthStore } from '@/stores/authStore.js'
+import { ADMIN_REGISTRAR_ROLES } from '@/routeRoles.js'
 import { HTTP_FORBIDDEN, HTTP_UNAUTHORIZED } from '@/services/http.js'
 import {
   FIRST_PAGE,
@@ -92,6 +95,14 @@ let listRequestId = 0
 let searchDebounceTimer = null
 
 const toast = useToast()
+const authStore = useAuthStore()
+
+const canManageMobileAccounts = computed(() => authStore.hasAnyRole(ADMIN_REGISTRAR_ROLES))
+const mobileAccountStudent = ref(null)
+
+function openMobileAccount(student) {
+  mobileAccountStudent.value = student
+}
 
 const formTitle = computed(() => (editingStudent.value ? EDIT_TITLE : ADD_TITLE))
 const isConfirmOpen = computed(() => deletingStudent.value !== null)
@@ -315,6 +326,17 @@ onBeforeUnmount(cancelPendingSearch)
       <template #actions="{ row }">
         <div class="flex justify-end gap-2">
           <button
+            v-if="canManageMobileAccounts"
+            type="button"
+            :class="SECONDARY_BUTTON_CLASS"
+            class="text-ink"
+            :aria-label="`Mobile account of ${formatStudentName(row)}`"
+            @click="openMobileAccount(row)"
+          >
+            <Smartphone :size="16" aria-hidden="true" />
+            <span class="hidden sm:inline">Mobile account</span>
+          </button>
+          <button
             type="button"
             :class="SECONDARY_BUTTON_CLASS"
             class="text-ink"
@@ -377,4 +399,6 @@ onBeforeUnmount(cancelPendingSearch)
     @confirm="confirmDelete"
     @cancel="cancelDelete"
   />
+
+  <StudentMobileAccountModalView :student="mobileAccountStudent" @close="mobileAccountStudent = null" />
 </template>
