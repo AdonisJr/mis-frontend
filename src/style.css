@@ -23,3 +23,10 @@
 }
 
 @page class-record { size: landscape; margin: 10mm; }
+
+/* the teleported slip sheet must print alone: the app root, open dialogs and toasts are its body siblings */
+@media print {
+  body:has(> .print-mobile-slips) > :not(.print-mobile-slips) {
+    display: none;
+  }
+}
