@@ -23,6 +23,7 @@ import {
   AR_AGING_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   REPORT_CARD_ROUTE_NAME,
+  RFID_CARDS_ROUTE_NAME,
   ROOT_ROUTE_NAME,
   SECTION_REPORT_CARDS_ROUTE_NAME,
   STATEMENT_OF_ACCOUNT_ROUTE_NAME,
@@ -144,6 +145,13 @@ describe('ROUTE_ROLES', () => {
     expect(otherRouteNames).toContain('PaymentHolds')
     for (const routeName of otherRouteNames) {
       expect(ROUTE_ROLES[routeName]).not.toContain(ACCOUNTANT_ROLE)
+    }
+  })
+
+  it('gives RFID Cards to admin and registrar only', () => {
+    expect(ROUTE_ROLES[RFID_CARDS_ROUTE_NAME]).toEqual(['admin', 'registrar'])
+    for (const otherRole of ['cashier', 'teacher', 'accountant']) {
+      expect(ROUTE_ROLES[RFID_CARDS_ROUTE_NAME]).not.toContain(otherRole)
     }
   })
 })
