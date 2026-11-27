@@ -5,11 +5,13 @@ import {
   CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
   CURRICULUM_ROUTE_NAME,
+  EMPLOYEES_ROUTE_NAME,
   GENERAL_LEDGER_ROUTE_NAME,
   JOURNAL_ENTRIES_ROUTE_NAME,
   MY_CLASSES_ROUTE_NAME,
   PAYMENTS_ROUTE_NAME,
   PAYMENT_HOLDS_ROUTE_NAME,
+  RFID_CARDS_ROUTE_NAME,
   POSTING_SETTINGS_ROUTE_NAME,
   ROOMS_ROUTE_NAME,
   SECTIONS_ROUTE_NAME,
@@ -78,6 +80,18 @@ describe('listVisibleNavItems', () => {
     expect(listRouteNames(['registrar'])).toContain(MY_CLASSES_ROUTE_NAME)
     expect(listRouteNames(['teacher'])).toContain(MY_CLASSES_ROUTE_NAME)
     expect(listRouteNames(['cashier'])).not.toContain(MY_CLASSES_ROUTE_NAME)
+  })
+
+  it('keeps RFID Cards under People after Employees, for admin and registrar', () => {
+    const employeesIndex = NAV_ITEMS.findIndex((navItem) => navItem.routeName === EMPLOYEES_ROUTE_NAME)
+    const rfidCardsItem = NAV_ITEMS[employeesIndex + 1]
+    expect(rfidCardsItem.routeName).toBe(RFID_CARDS_ROUTE_NAME)
+    expect(rfidCardsItem.group).toBe('People')
+    expect(listRouteNames(['admin'])).toContain(RFID_CARDS_ROUTE_NAME)
+    expect(listRouteNames(['registrar'])).toContain(RFID_CARDS_ROUTE_NAME)
+    for (const otherRole of ['cashier', 'teacher', 'accountant']) {
+      expect(listRouteNames([otherRole])).not.toContain(RFID_CARDS_ROUTE_NAME)
+    }
   })
 
   it('returns an empty list for non-array items', () => {

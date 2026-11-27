@@ -1,7 +1,7 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useToast } from 'vue-toastification'
-import { Pencil, Plus, Smartphone, Trash2 } from '@lucide/vue'
+import { IdCard, Pencil, Plus, Smartphone, Trash2 } from '@lucide/vue'
 import DataTable from '@/components/DataTable.vue'
 import Modal from '@/components/modal/Modal.vue'
 import ConfirmDialog from '@/components/modal/ConfirmDialog.vue'
@@ -9,6 +9,7 @@ import StudentFilterBar from '@/components/StudentFilterBar.vue'
 import StudentFormFields from '@/components/StudentFormFields.vue'
 import TablePagination from '@/components/TablePagination.vue'
 import StudentMobileAccountModalView from '@/views/StudentMobileAccountModalView.vue'
+import StudentRfidModalView from '@/views/StudentRfidModalView.vue'
 import { createStudent, deleteStudent, fetchStudents, updateStudent } from '@/services/studentService.js'
 import { fetchGradeLevels } from '@/services/gradeLevelService.js'
 import { useAuthStore } from '@/stores/authStore.js'
@@ -97,11 +98,20 @@ let searchDebounceTimer = null
 const toast = useToast()
 const authStore = useAuthStore()
 
-const canManageMobileAccounts = computed(() => authStore.hasAnyRole(ADMIN_REGISTRAR_ROLES))
+const canUseRegistryActions = computed(() => authStore.hasAnyRole(ADMIN_REGISTRAR_ROLES))
 const mobileAccountStudent = ref(null)
 
 function openMobileAccount(student) {
   mobileAccountStudent.value = student
+}
+
+const rfidStudent = ref(null)
+
+async function openRfidModal(student) {
+  // reset first so reopening the same row re-fires the modal watcher
+  rfidStudent.value = null
+  await nextTick()
+  rfidStudent.value = student
 }
 
 const formTitle = computed(() => (editingStudent.value ? EDIT_TITLE : ADD_TITLE))
@@ -326,7 +336,18 @@ onBeforeUnmount(cancelPendingSearch)
       <template #actions="{ row }">
         <div class="flex justify-end gap-2">
           <button
-            v-if="canManageMobileAccounts"
+            v-if="canUseRegistryActions"
+            type="button"
+            :class="SECONDARY_BUTTON_CLASS"
+            class="text-ink"
+            :aria-label="`Assign RFID card to ${formatStudentName(row)}`"
+            @click="openRfidModal(row)"
+          >
+            <IdCard :size="16" aria-hidden="true" />
+            <span class="hidden sm:inline">Assign RFID</span>
+          </button>
+          <button
+            v-if="canUseRegistryActions"
             type="button"
             :class="SECONDARY_BUTTON_CLASS"
             class="text-ink"
@@ -401,4 +422,6 @@ onBeforeUnmount(cancelPendingSearch)
   />
 
   <StudentMobileAccountModalView :student="mobileAccountStudent" @close="mobileAccountStudent = null" />
+
+  <StudentRfidModalView :student="rfidStudent" @close="rfidStudent = null" @changed="loadStudents" />
 </template>
