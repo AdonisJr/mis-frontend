@@ -36,7 +36,7 @@ Exactly this sequence, nothing else:
 ```
 **TASK COMPLETED**
 **Files Touched:** [list]
-**Checks Run:** [npm run build — PASS/FAIL; no test or lint tool is installed]
+**Checks Run:** [npm test — PASS/FAIL (n tests); npm run build — PASS/FAIL; no lint tool is installed]
 **Audits Run:** [rules-common, rules-frontend.md — PASS/FAIL]
 **Fixes Applied:** [list or "None"]
 ```
@@ -61,7 +61,7 @@ Exactly this sequence, nothing else:
 7. Build in layer order: api-service → store? → component → view → route → layout?. Skip layers the plan doesn't touch.
    - No code generators exist for this stack: create files by hand in the folders and with the names in `rules-frontend.md` §2. The first service ticket creates `src/services/http.js` (the single axios client) and adds the `@/` alias to `vite.config.js` if it is still missing.
 8. Write/modify each file exactly as specified.
-9. Run checks: `npm run build` (the only automated check — no test runner or linter is installed; do not add one unless the plan says so). It needs Node 20.19+ or 22.12+ (Vite 8); on an older Node report `Checks Run: npm run build — not run (Node < 20.19)` instead of working around it. Fix failures caused by your change. Report failures that already existed before your change rather than "fixing" unrelated code.
+9. Run checks: `npm test` (Vitest, `vitest run`) and `npm run build`. No linter is installed; do not add one unless the plan says so. It needs Node 20.19+ or 22.12+ (Vite 8); on an older Node report `Checks Run: npm run build — not run (Node < 20.19)` instead of working around it. Fix failures caused by your change. Report failures that already existed before your change rather than "fixing" unrelated code.
 10. Self-audit every touched file against `rules-frontend.md`, then `rules-common.md`. Fix violations; print `FIXED:` lines.
 11. DOX closeout — update the nearest owning `AGENTS.md` if a contract, route, entity, or folder purpose changed.
 12. Diagrams — for every view, component, route or layout you added/changed, update the matching Mermaid file in `.claude/diagrams/` (`fe-<layer>-classes.md` or `fe-pages-components.md`); create it if missing. This writes into the workspace wiki through the symlink.
