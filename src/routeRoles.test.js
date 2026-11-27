@@ -3,6 +3,8 @@ import { ROUTE_ROLES } from '@/routeRoles.js'
 import { ACCOUNTANT_ROLE, EMPLOYEE_ROLES, TEACHER_ROLE } from '@/utils/roleAccess.js'
 import {
   ASSESSMENTS_ROUTE_NAME,
+  ATTENDANCE_RECORDS_ROUTE_NAME,
+  ATTENDANCE_TODAY_ROUTE_NAME,
   CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_LIST_ROUTE_NAME,
   CLASS_RECORD_ROUTE_NAME,
@@ -152,6 +154,15 @@ describe('ROUTE_ROLES', () => {
     expect(ROUTE_ROLES[RFID_CARDS_ROUTE_NAME]).toEqual(['admin', 'registrar'])
     for (const otherRole of ['cashier', 'teacher', 'accountant']) {
       expect(ROUTE_ROLES[RFID_CARDS_ROUTE_NAME]).not.toContain(otherRole)
+    }
+  })
+
+  it('gives both Attendance pages to admin and registrar only', () => {
+    for (const routeName of [ATTENDANCE_TODAY_ROUTE_NAME, ATTENDANCE_RECORDS_ROUTE_NAME]) {
+      expect(ROUTE_ROLES[routeName]).toEqual(['admin', 'registrar'])
+      for (const otherRole of ['cashier', 'teacher', 'accountant']) {
+        expect(ROUTE_ROLES[routeName]).not.toContain(otherRole)
+      }
     }
   })
 })

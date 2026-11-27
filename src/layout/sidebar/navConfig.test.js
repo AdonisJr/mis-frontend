@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { NAV_ITEMS, buildNavRows, listVisibleNavItems } from '@/layout/sidebar/navConfig.js'
 import {
   ASSESSMENTS_ROUTE_NAME,
+  ATTENDANCE_RECORDS_ROUTE_NAME,
+  ATTENDANCE_TODAY_ROUTE_NAME,
   CHART_OF_ACCOUNTS_ROUTE_NAME,
   CLASS_SCHEDULES_ROUTE_NAME,
   CURRICULUM_ROUTE_NAME,
@@ -173,5 +175,22 @@ describe('listVisibleNavItems', () => {
       'BalanceSheet',
       'ArAging',
     ])
+  })
+
+  it('shows the Attendance group (Today, Records) to admin and registrar only', () => {
+    const todayIndex = NAV_ITEMS.findIndex((navItem) => navItem.routeName === ATTENDANCE_TODAY_ROUTE_NAME)
+    expect(NAV_ITEMS[todayIndex].group).toBe('Attendance')
+    expect(NAV_ITEMS[todayIndex + 1].routeName).toBe(ATTENDANCE_RECORDS_ROUTE_NAME)
+    expect(NAV_ITEMS[todayIndex + 1].group).toBe('Attendance')
+    for (const allowedRole of ['admin', 'registrar']) {
+      expect(listRouteNames([allowedRole])).toEqual(
+        expect.arrayContaining([ATTENDANCE_TODAY_ROUTE_NAME, ATTENDANCE_RECORDS_ROUTE_NAME]),
+      )
+    }
+    for (const otherRole of ['cashier', 'teacher', 'accountant']) {
+      const visibleNames = listRouteNames([otherRole])
+      expect(visibleNames).not.toContain(ATTENDANCE_TODAY_ROUTE_NAME)
+      expect(visibleNames).not.toContain(ATTENDANCE_RECORDS_ROUTE_NAME)
+    }
   })
 })
