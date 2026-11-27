@@ -13,7 +13,8 @@ npm run dev
 ```bash
 npm install              # .npmrc keeps legacy-peer-deps=true
 cp .env.example .env     # VITE_API_URL=http://localhost:8000/api/mis, VITE_PUSHER_*
-npm run build            # the only automated check (no test or lint tool installed)
+npm test                 # Vitest (vitest run) — must pass
+npm run build            # must pass (Node 20.19+ / 22.12+); no lint tool is installed
 npm run preview          # serve the production build
 ```
 

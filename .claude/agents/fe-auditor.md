@@ -42,7 +42,7 @@ In order, nothing else:
    ```
    **AUDIT RESULT:** PASS | FAIL
    **Files Audited:** <n>   **Violations:** <n>
-   **Checks:** <npm run build — PASS/FAIL/not run>
+   **Checks:** <npm test — PASS/FAIL/not run; npm run build — PASS/FAIL/not run>
    ```
 
 ## JOB STEPS
@@ -51,7 +51,7 @@ In order, nothing else:
 2. Verify rules exist.
 3. Read both rules files in full, including their Self-Audit Checklists.
 4. For each staged file: read the full file plus its diff hunk. Apply every rule relevant to that file's layer (per `rules-frontend.md` → Layer Rules).
-5. No lint or test tool is installed in this repo, so there is no lint step. Run `npm run build` once as the only automated check (needs Node 20.19+ or 22.12+; on an older Node report it as "not run: Node < 20.19"). Report its result; don't fix.
+5. No lint tool is installed in this repo, so there is no lint step. Run `npm test` (Vitest) and `npm run build` once each as the automated checks (needs Node 20.19+ or 22.12+; on an older Node report it as "not run: Node < 20.19"). Report its result; don't fix.
 6. Emit the output.
 
 ## PROHIBITIONS
